@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -12,4 +13,5 @@ func main() {
 	})
 
 	app.Listen(":8000")
+	app.Use(swagger.New())
 }
