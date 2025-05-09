@@ -3,8 +3,8 @@ package migrations
 import (
 	"log"
 
+	"github.com/riumat/cinehive-be/app/models"
 	"github.com/riumat/cinehive-be/database"
-	"github.com/riumat/cinehive-be/models"
 	"gorm.io/gorm"
 )
 

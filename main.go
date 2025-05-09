@@ -7,6 +7,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/riumat/cinehive-be/database"
 	"github.com/riumat/cinehive-be/migrations"
+	"github.com/riumat/cinehive-be/pkg/middleware"
+	"github.com/riumat/cinehive-be/pkg/routes"
 )
 
 func main() {
@@ -18,10 +20,9 @@ func main() {
 	database.ConnectDB()
 
 	app := fiber.New()
+	middleware.FiberMiddleware(app)
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Cinehive API")
-	})
+	routes.PublicRoutes(app)
 
 	app.Listen(":8000")
 	app.Use(swagger.New())
