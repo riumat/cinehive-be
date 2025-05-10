@@ -32,5 +32,4 @@ func ConnectDB() {
 		log.Fatal("Errore di connessione al database:", err)
 	}
 
-	fmt.Println("Database connesso con successo!")
 }

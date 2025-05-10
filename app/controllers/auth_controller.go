@@ -27,6 +27,7 @@ import (
 func UserSignUp(c *fiber.Ctx) error {
 	// Create a new user auth struct.
 	signUp := &models.SignUp{}
+	database.ConnectDB()
 
 	// Checking received data from JSON body.
 	if err := c.BodyParser(signUp); err != nil {

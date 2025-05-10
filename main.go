@@ -5,7 +5,6 @@ import (
 
 	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
-	"github.com/riumat/cinehive-be/database"
 	"github.com/riumat/cinehive-be/migrations"
 	"github.com/riumat/cinehive-be/pkg/middleware"
 	"github.com/riumat/cinehive-be/pkg/routes"
@@ -16,8 +15,6 @@ func main() {
 		migrations.Migrate()
 		return
 	}
-
-	database.ConnectDB()
 
 	app := fiber.New()
 	middleware.FiberMiddleware(app)
