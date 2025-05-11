@@ -1,12 +1,10 @@
 package services
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-
 	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/config/endpoints"
+	"github.com/riumat/cinehive-be/pkg/utils"
+	"golang.org/x/sync/errgroup"
 )
 
 type Movie struct {
@@ -17,24 +15,70 @@ type Movie struct {
 	GenresID    []int  `json:"genre_ids"`
 }
 
-func FetchFeaturedMovie(client *config.TMDBClient) (Movie, error) {
-	resp, err := client.Get(endpoints.TmdbEndpoint.Trending.Movies, nil)
+type Provider struct {
+	IT struct {
+		Flatrate []struct {
+			LogoPath        string `json:"logo_path"`
+			ProviderID      int    `json:"provider_id"`
+			ProviderName    string `json:"provider_name"`
+			ProviderCountry string `json:"provider_country"`
+		} `json:"flatrate"`
+	}
+}
+
+func FetchFeaturedMovie(client *config.TMDBClient) (any, error) {
+
+	data, err := HttpGet[utils.Response[[]Movie]](client, endpoints.TmdbEndpoint.Trending.Movies, nil)
 	if err != nil {
-		return Movie{}, fmt.Errorf("failed to fetch data from TMDB: %w", err)
+		return nil, err
 	}
 
-	defer resp.Body.Close()
+	return data.Results[0], nil
+}
 
-	if resp.StatusCode != http.StatusOK {
-		return Movie{}, fmt.Errorf("TMDB API returned status code %d", resp.StatusCode)
+func FetchMovieHeaderDetails(client *config.TMDBClient, id string) (any, error) {
+	var g errgroup.Group
+	var details, images map[string]any
+	var providers Provider
+
+	providerParams := map[string]string{
+		"watch_region": "IT",
 	}
 
-	var result struct {
-		Results []Movie `json:"results"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return Movie{}, fmt.Errorf("failed to parse TMDB response: %w", err)
+	g.Go(func() error {
+		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend("movie", id, []string{"external_ids"}), nil)
+		if err != nil {
+			return err
+		}
+		details = results
+		return nil
+	})
+
+	g.Go(func() error {
+		results, err := HttpGet[utils.Response[Provider]](client, endpoints.TmdbEndpoint.DynamicContent.Providers("movie", id), providerParams)
+		if err != nil {
+			return err
+		}
+		providers = results.Results
+		return nil
+	})
+
+	g.Go(func() error {
+		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Images("movie", id), nil)
+		if err != nil {
+			return err
+		}
+		images = results
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return nil, err
 	}
 
-	return result.Results[0], nil
+	details["providers"] = providers.IT.Flatrate
+	details["images"] = images
+
+	return details, nil
+
 }

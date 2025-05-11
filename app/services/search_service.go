@@ -1,12 +1,11 @@
 package services
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/config/endpoints"
+	"github.com/riumat/cinehive-be/pkg/utils"
 )
 
 type SearchResult struct {
@@ -16,31 +15,16 @@ type SearchResult struct {
 	Page         int   `json:"page"`
 }
 
-func FetchSearchResults(client *config.TMDBClient, query, page string) (SearchResult, error) {
+func FetchSearchResults(client *config.TMDBClient, query, page string) (utils.PaginatedResponse[[]any], error) {
 	queryParams := map[string]string{
 		"query": query,
 		"page":  page,
 	}
 
-	resp, err := client.Get(endpoints.TmdbEndpoint.Search.Multi, queryParams)
+	resp, err := HttpGet[utils.PaginatedResponse[[]any]](client, endpoints.TmdbEndpoint.Search.Multi, queryParams)
 	if err != nil {
-		return SearchResult{}, fmt.Errorf("failed to fetch data from TMDB: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return SearchResult{}, fmt.Errorf("TMDB API returned status code %d", resp.StatusCode)
+		return utils.PaginatedResponse[[]any]{}, fmt.Errorf("failed to fetch data from TMDB: %w", err)
 	}
 
-	var result struct {
-		Results      []any `json:"results"`
-		TotalPages   int   `json:"total_pages"`
-		TotalResults int   `json:"total_results"`
-		Page         int   `json:"page"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return SearchResult{}, fmt.Errorf("failed to parse TMDB response: %w", err)
-	}
-
-	return result, nil
+	return resp, nil
 }

@@ -1,12 +1,9 @@
 package services
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-
 	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/config/endpoints"
+	"github.com/riumat/cinehive-be/pkg/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -17,46 +14,25 @@ type ContentCard struct {
 	PosterPath string `json:"poster_path"`
 }
 
-func ContentFetcher(client *config.TMDBClient, url string) ([]ContentCard, error) {
-	resp, err := client.Get(url, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("TMDB API returned status code %d", resp.StatusCode)
-	}
-
-	var result struct {
-		Results []ContentCard `json:"results"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
-	}
-
-	return result.Results, nil
-}
-
 func FetchLandingCards(client *config.TMDBClient) (map[string][]ContentCard, error) {
 	var g errgroup.Group
 	var movies, tvShows []ContentCard
 
 	g.Go(func() error {
-		results, err := ContentFetcher(client, endpoints.TmdbEndpoint.Trending.Movies)
+		results, err := HttpGet[utils.Response[[]ContentCard]](client, endpoints.TmdbEndpoint.Trending.Movies, nil)
 		if err != nil {
 			return err
 		}
-		movies = results
+		movies = results.Results
 		return nil
 	})
 
 	g.Go(func() error {
-		results, err := ContentFetcher(client, endpoints.TmdbEndpoint.Trending.TV)
+		results, err := HttpGet[utils.Response[[]ContentCard]](client, endpoints.TmdbEndpoint.Trending.TV, nil)
 		if err != nil {
 			return err
 		}
-		tvShows = results
+		tvShows = results.Results
 		return nil
 	})
 

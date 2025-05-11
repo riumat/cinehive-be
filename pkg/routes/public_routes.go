@@ -11,11 +11,14 @@ func PublicRoutes(a *fiber.App) {
 	route.Post("/auth/signup", controllers.UserSignUp)
 	route.Post("/auth/signin", controllers.UserSignIn)
 
-	route.Get("/movie/featured", controllers.GetFeaturedMovie)
 	route.Get("/trending", controllers.GetTrendingContent)
 
 	route.Get("/genres/movie", controllers.GetMovieGenres)
 	route.Get("/genres/tv", controllers.GetTvGenres)
 
 	route.Get("/search", controllers.GetSearchResults)
+
+	route.Get("/movie/:id/header", controllers.GetMovieHeader)
+	route.Get("/movie/featured", controllers.GetFeaturedMovie)
+
 }
