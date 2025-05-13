@@ -18,16 +18,22 @@ type Movie struct {
 type Provider struct {
 	IT struct {
 		Flatrate []struct {
-			LogoPath        string `json:"logo_path"`
-			ProviderID      int    `json:"provider_id"`
-			ProviderName    string `json:"provider_name"`
-			ProviderCountry string `json:"provider_country"`
+			LogoPath        string  `json:"logo_path"`
+			ProviderID      float64 `json:"provider_id"`
+			ProviderName    string  `json:"provider_name"`
+			ProviderCountry string  `json:"provider_country"`
 		} `json:"flatrate"`
 	}
 }
 
-func FetchFeaturedMovie(client *config.TMDBClient) (any, error) {
+type CastItem struct {
+	ID          float64 `json:"id"`
+	Name        string  `json:"name"`
+	ProfilePath string  `json:"profile_path"`
+	Character   string  `json:"character"`
+}
 
+func FetchFeaturedMovie(client *config.TMDBClient) (any, error) {
 	data, err := HttpGet[utils.Response[[]Movie]](client, endpoints.TmdbEndpoint.Trending.Movies, nil)
 	if err != nil {
 		return nil, err
@@ -80,5 +86,62 @@ func FetchMovieHeaderDetails(client *config.TMDBClient, id string) (any, error) 
 	details["images"] = images
 
 	return details, nil
+}
 
+func FetchMovieOverviewDetails(client *config.TMDBClient, id string) (any, error) {
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend("movie", id, []string{"credits"}), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func FetchMovieCastDetails(client *config.TMDBClient, id string) ([]CastItem, error) {
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Credits("movie", id, "credits"), nil)
+	if err != nil {
+		return nil, err
+	}
+	cast, ok := results["cast"].([]any)
+	if !ok {
+		return nil, nil
+	}
+
+	var castItems []CastItem
+	for _, item := range cast {
+		if castMap, ok := item.(map[string]interface{}); ok {
+			castItem := CastItem{}
+			if id, ok := castMap["id"].(float64); ok {
+				castItem.ID = id
+			}
+			if name, ok := castMap["name"].(string); ok {
+				castItem.Name = name
+			}
+			if profile, ok := castMap["profile_path"].(string); ok {
+				castItem.ProfilePath = profile
+			}
+			if character, ok := castMap["character"].(string); ok {
+				castItem.Character = character
+			}
+			castItems = append(castItems, castItem)
+		}
+	}
+
+	return castItems, nil
+}
+
+func FetchMovieCrewDetails(client *config.TMDBClient, id string) (any, error) {
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Credits("movie", id, "credits"), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	crew, ok := results["crew"].([]any)
+	if !ok {
+		return crew, nil
+	}
+
+	formattedCrew := utils.FormatCrewList(crew)
+
+	return formattedCrew, nil
 }
