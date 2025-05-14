@@ -9,11 +9,12 @@ import (
 )
 
 type Movie struct {
-	Title       string `json:"title"`
-	Overview    string `json:"overview"`
-	ReleaseDate string `json:"release_date"`
-	PosterPath  string `json:"poster_path"`
-	GenresID    []int  `json:"genre_ids"`
+	Title        string `json:"title"`
+	Overview     string `json:"overview"`
+	ReleaseDate  string `json:"release_date"`
+	PosterPath   string `json:"poster_path"`
+	BackdropPath string `json:"backdrop_path,omitempty"`
+	GenresID     []int  `json:"genre_ids"`
 }
 
 const (
@@ -21,7 +22,7 @@ const (
 )
 
 func FetchFeaturedMovie(client *config.TMDBClient) (any, error) {
-	data, err := HttpGet[utils.Response[[]Movie]](client, endpoints.TmdbEndpoint.Trending.Movies, nil)
+	data, err := HttpGet[utils.Response[[]any]](client, endpoints.TmdbEndpoint.Trending.Movies, nil)
 	if err != nil {
 		return nil, err
 	}
