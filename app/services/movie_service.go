@@ -22,7 +22,7 @@ const (
 )
 
 func FetchFeaturedMovie(client *config.TMDBClient) (any, error) {
-	data, err := HttpGet[utils.Response[[]any]](client, endpoints.TmdbEndpoint.Trending.Movies, nil)
+	data, err := HttpGet[utils.Response[[]Movie]](client, endpoints.TmdbEndpoint.Trending.Movies, nil)
 	if err != nil {
 		return nil, err
 	}
