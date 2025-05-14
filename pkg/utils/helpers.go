@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"slices"
 	"sort"
 	"strings"
@@ -11,6 +12,52 @@ type CrewItem struct {
 	Name        string  `json:"name"`
 	ProfilePath string  `json:"profile_path"`
 	Job         string  `json:"job"`
+}
+
+type VideoItem struct {
+	ID       float64 `json:"id"`
+	Key      string  `json:"key"`
+	Name     string  `json:"name"`
+	Official bool    `json:"official"`
+	Site     string  `json:"site"`
+	Type     string  `json:"type"`
+	Size     float64 `json:"size"`
+}
+
+func FormatVideoList(videos []any) ([]any, []any) {
+	var trailers []any
+	var others []any
+
+	for _, video := range videos {
+		videoMap, ok := video.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		official, ok := videoMap["official"].(bool)
+		if !ok || !official {
+			continue
+		}
+
+		site, ok := videoMap["site"].(string)
+		if !ok || (site != "YouTube") {
+			continue
+		}
+
+		videoType, ok := videoMap["type"].(string)
+		if !ok {
+			continue
+		}
+
+		if videoType == "Trailer" || videoType == "Teaser" {
+			trailers = append(trailers, video)
+		} else {
+			others = append(others, video)
+		}
+	}
+
+	log.Println("others:", others)
+	return trailers, others
 }
 
 func FormatCrewList(crew []any) []CrewItem {

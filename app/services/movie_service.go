@@ -145,3 +145,38 @@ func FetchMovieCrewDetails(client *config.TMDBClient, id string) (any, error) {
 
 	return formattedCrew, nil
 }
+
+func FetchMovieVideos(client *config.TMDBClient, id string) (any, error) {
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Videos("movie", id), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	videos, ok := results["results"].([]any)
+	if !ok {
+		return nil, nil
+	}
+
+	type MovieVideos struct {
+		Trailers []any `json:"trailers"`
+		Others   []any `json:"others"`
+	}
+
+	trailers, others := utils.FormatVideoList(videos)
+
+	movieVideos := MovieVideos{
+		Trailers: trailers,
+		Others:   others,
+	}
+	
+	return movieVideos, nil
+}
+
+func FetchMovieRecommendations(client *config.TMDBClient, id string) (any, error) {
+	results, err := HttpGet[utils.Response[[]Movie]](client, endpoints.TmdbEndpoint.DynamicContent.Recommendations("movie", id), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return results.Results, nil
+}
