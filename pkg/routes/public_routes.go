@@ -17,6 +17,7 @@ func PublicRoutes(a *fiber.App) {
 	route.Get("/genres/tv", controllers.GetTvGenres)
 
 	route.Get("/search", controllers.GetSearchResults)
+	route.Get("/search/filters", controllers.GetSearchWithFilters)
 
 	route.Get("/movie/featured", controllers.GetFeaturedMovie)
 
