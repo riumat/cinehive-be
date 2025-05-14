@@ -26,4 +26,12 @@ func PublicRoutes(a *fiber.App) {
 	route.Get("/movie/:id/crew", controllers.GetMovieCrew)
 	route.Get("/movie/:id/videos", controllers.GetMovieVideos)
 	route.Get("/movie/:id/recommendations", controllers.GetMovieRecommendations)
+
+	route.Get("/tv/:id/header", controllers.GetTvHeader)
+	route.Get("/tv/:id/overview", controllers.GetTvOverview)
+	route.Get("/tv/:id/cast", controllers.GetTvCast)
+	route.Get("/tv/:id/crew", controllers.GetTvCrew)
+	route.Get("/tv/:id/videos", controllers.GetTvVideos)
+	route.Get("/tv/:id/recommendations", controllers.GetTvRecommendations)
+	route.Get("/tv/:id/seasons", controllers.GetTvSeasons)
 }

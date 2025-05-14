@@ -17,6 +17,7 @@ func main() {
 	}
 
 	app := fiber.New()
+
 	middleware.FiberMiddleware(app)
 
 	routes.PublicRoutes(app)

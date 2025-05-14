@@ -14,6 +14,19 @@ type ContentCard struct {
 	PosterPath string `json:"poster_path"`
 }
 
+type Provider struct {
+	IT struct {
+		Flatrate []struct {
+			LogoPath        string  `json:"logo_path"`
+			ProviderID      float64 `json:"provider_id"`
+			ProviderName    string  `json:"provider_name"`
+			ProviderCountry string  `json:"provider_country"`
+		} `json:"flatrate"`
+	}
+}
+
+
+
 func FetchLandingCards(client *config.TMDBClient) (map[string][]ContentCard, error) {
 	var g errgroup.Group
 	var movies, tvShows []ContentCard

@@ -4,6 +4,7 @@ import (
 	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/config/endpoints"
 	"github.com/riumat/cinehive-be/pkg/utils"
+	"github.com/riumat/cinehive-be/pkg/utils/types"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -15,23 +16,9 @@ type Movie struct {
 	GenresID    []int  `json:"genre_ids"`
 }
 
-type Provider struct {
-	IT struct {
-		Flatrate []struct {
-			LogoPath        string  `json:"logo_path"`
-			ProviderID      float64 `json:"provider_id"`
-			ProviderName    string  `json:"provider_name"`
-			ProviderCountry string  `json:"provider_country"`
-		} `json:"flatrate"`
-	}
-}
-
-type CastItem struct {
-	ID          float64 `json:"id"`
-	Name        string  `json:"name"`
-	ProfilePath string  `json:"profile_path"`
-	Character   string  `json:"character"`
-}
+const (
+	MOVIE = "movie"
+)
 
 func FetchFeaturedMovie(client *config.TMDBClient) (any, error) {
 	data, err := HttpGet[utils.Response[[]Movie]](client, endpoints.TmdbEndpoint.Trending.Movies, nil)
@@ -52,7 +39,7 @@ func FetchMovieHeaderDetails(client *config.TMDBClient, id string) (any, error) 
 	}
 
 	g.Go(func() error {
-		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend("movie", id, []string{"external_ids"}), nil)
+		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(MOVIE, id, []string{"external_ids"}), nil)
 		if err != nil {
 			return err
 		}
@@ -61,7 +48,7 @@ func FetchMovieHeaderDetails(client *config.TMDBClient, id string) (any, error) 
 	})
 
 	g.Go(func() error {
-		results, err := HttpGet[utils.Response[Provider]](client, endpoints.TmdbEndpoint.DynamicContent.Providers("movie", id), providerParams)
+		results, err := HttpGet[utils.Response[Provider]](client, endpoints.TmdbEndpoint.DynamicContent.Providers(MOVIE, id), providerParams)
 		if err != nil {
 			return err
 		}
@@ -70,7 +57,7 @@ func FetchMovieHeaderDetails(client *config.TMDBClient, id string) (any, error) 
 	})
 
 	g.Go(func() error {
-		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Images("movie", id), nil)
+		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Images(MOVIE, id), nil)
 		if err != nil {
 			return err
 		}
@@ -89,7 +76,7 @@ func FetchMovieHeaderDetails(client *config.TMDBClient, id string) (any, error) 
 }
 
 func FetchMovieOverviewDetails(client *config.TMDBClient, id string) (any, error) {
-	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend("movie", id, []string{"credits"}), nil)
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(MOVIE, id, []string{"credits"}), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +84,8 @@ func FetchMovieOverviewDetails(client *config.TMDBClient, id string) (any, error
 	return results, nil
 }
 
-func FetchMovieCastDetails(client *config.TMDBClient, id string) ([]CastItem, error) {
-	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Credits("movie", id, "credits"), nil)
+func FetchMovieCastDetails(client *config.TMDBClient, id string) ([]types.CastItem, error) {
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Credits(MOVIE, id, "credits"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -107,10 +94,10 @@ func FetchMovieCastDetails(client *config.TMDBClient, id string) ([]CastItem, er
 		return nil, nil
 	}
 
-	var castItems []CastItem
+	var castItems []types.CastItem
 	for _, item := range cast {
 		if castMap, ok := item.(map[string]interface{}); ok {
-			castItem := CastItem{}
+			castItem := types.CastItem{}
 			if id, ok := castMap["id"].(float64); ok {
 				castItem.ID = id
 			}
@@ -131,7 +118,7 @@ func FetchMovieCastDetails(client *config.TMDBClient, id string) ([]CastItem, er
 }
 
 func FetchMovieCrewDetails(client *config.TMDBClient, id string) (any, error) {
-	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Credits("movie", id, "credits"), nil)
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Credits(MOVIE, id, "credits"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -141,13 +128,13 @@ func FetchMovieCrewDetails(client *config.TMDBClient, id string) (any, error) {
 		return crew, nil
 	}
 
-	formattedCrew := utils.FormatCrewList(crew)
+	formattedCrew := utils.FormatMovieCrewList(crew)
 
 	return formattedCrew, nil
 }
 
 func FetchMovieVideos(client *config.TMDBClient, id string) (any, error) {
-	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Videos("movie", id), nil)
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Videos(MOVIE, id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -168,12 +155,12 @@ func FetchMovieVideos(client *config.TMDBClient, id string) (any, error) {
 		Trailers: trailers,
 		Others:   others,
 	}
-	
+
 	return movieVideos, nil
 }
 
 func FetchMovieRecommendations(client *config.TMDBClient, id string) (any, error) {
-	results, err := HttpGet[utils.Response[[]Movie]](client, endpoints.TmdbEndpoint.DynamicContent.Recommendations("movie", id), nil)
+	results, err := HttpGet[utils.Response[[]Movie]](client, endpoints.TmdbEndpoint.DynamicContent.Recommendations(MOVIE, id), nil)
 	if err != nil {
 		return nil, err
 	}
