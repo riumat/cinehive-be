@@ -8,10 +8,11 @@ import (
 )
 
 type ContentCard struct {
-	ID         int    `json:"id"`
-	Title      string `json:"title,omitempty"`
-	Name       string `json:"name,omitempty"`
-	PosterPath string `json:"poster_path"`
+	ID           int    `json:"id"`
+	Title        string `json:"title,omitempty"`
+	Name         string `json:"name,omitempty"`
+	PosterPath   string `json:"poster_path"`
+	BackdropPath string `json:"backdrop_path"`
 }
 
 type Provider struct {
@@ -24,8 +25,6 @@ type Provider struct {
 		} `json:"flatrate"`
 	}
 }
-
-
 
 func FetchLandingCards(client *config.TMDBClient) (map[string][]ContentCard, error) {
 	var g errgroup.Group

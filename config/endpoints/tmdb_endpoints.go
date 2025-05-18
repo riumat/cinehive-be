@@ -36,10 +36,8 @@ var TmdbEndpoint = struct {
 		Videos          func(contentType, id string) string
 	}
 	Person struct {
-		All      func(id string) string
-		Images   func(id string) string
-		Credits  func(id string) string
-		External func(id string) string
+		All           func(id string) string
+		AllWithAppend func(id string, append []string) string
 	}
 	Discover struct {
 		All func(contentType string) string
@@ -102,22 +100,14 @@ var TmdbEndpoint = struct {
 		},
 	},
 	Person: struct {
-		All      func(id string) string
-		Images   func(id string) string
-		Credits  func(id string) string
-		External func(id string) string
+		All           func(id string) string
+		AllWithAppend func(id string, append []string) string
 	}{
 		All: func(id string) string {
 			return fmt.Sprintf("%s/%s", PERSON, id)
 		},
-		Images: func(id string) string {
-			return fmt.Sprintf("%s/%s/images", PERSON, id)
-		},
-		Credits: func(id string) string {
-			return fmt.Sprintf("%s/%s/combined_credits", PERSON, id)
-		},
-		External: func(id string) string {
-			return fmt.Sprintf("%s/%s/external_ids", PERSON, id)
+		AllWithAppend: func(id string, append []string) string {
+			return fmt.Sprintf("%s/%s?append_to_response=%s", PERSON, id, strings.Join(append, ","))
 		},
 	},
 	Discover: struct {

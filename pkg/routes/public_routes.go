@@ -35,4 +35,6 @@ func PublicRoutes(a *fiber.App) {
 	route.Get("/tv/:id/videos", controllers.GetTvVideos)
 	route.Get("/tv/:id/recommendations", controllers.GetTvRecommendations)
 	route.Get("/tv/:id/seasons", controllers.GetTvSeasons)
+
+	route.Get("/person/:id", controllers.GetPersonDetails)
 }

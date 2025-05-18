@@ -219,3 +219,131 @@ func FormatCrewTvList(crew []any) []CrewItem {
 
 	return formattedCrew
 }
+
+func FormatCombinedCredits(cast []map[string]any) []map[string]any {
+	excludedGenres := []int{99, 10767, 10764, 10763, 10762, 10768}
+	var filteredCredits []map[string]any
+
+	for _, credit := range cast {
+		mediaType, _ := credit["media_type"].(string)
+		if mediaType != "movie" && mediaType != "tv" {
+			continue
+		}
+
+		genreIDsAny, ok := credit["genre_ids"].([]any)
+		if !ok {
+			continue
+		}
+		var hasExcludedGenre bool
+		for _, g := range genreIDsAny {
+			genreID, ok := g.(float64)
+			if !ok {
+				continue
+			}
+			for _, ex := range excludedGenres {
+				if int(genreID) == ex {
+					hasExcludedGenre = true
+					break
+				}
+			}
+			if hasExcludedGenre {
+				break
+			}
+		}
+		if hasExcludedGenre {
+			continue
+		}
+
+		if mediaType == "tv" {
+			episodeCount, _ := credit["episode_count"].(float64)
+			if episodeCount < 2 {
+				continue
+			}
+		}
+
+		if character, ok := credit["character"].(string); ok {
+			if strings.Contains(strings.ToLower(character), "self") {
+				continue
+			}
+		}
+
+		if mediaType == "movie" {
+			order, _ := credit["order"].(float64)
+			if order > 10 {
+				continue
+			}
+		}
+
+		voteCount, _ := credit["vote_count"].(float64)
+		voteAverage, _ := credit["vote_average"].(float64)
+		if voteCount > 100 && voteAverage < 6 {
+			continue
+		}
+
+		filteredCredits = append(filteredCredits, credit)
+	}
+
+	sort.Slice(filteredCredits, func(i, j int) bool {
+		vi, _ := filteredCredits[i]["vote_count"].(float64)
+		vj, _ := filteredCredits[j]["vote_count"].(float64)
+		return vi > vj
+	})
+	if len(filteredCredits) > 20 {
+		filteredCredits = filteredCredits[:20]
+	}
+
+	sort.Slice(filteredCredits, func(i, j int) bool {
+		vi, _ := filteredCredits[i]["vote_average"].(float64)
+		vj, _ := filteredCredits[j]["vote_average"].(float64)
+		return vi > vj
+	})
+
+	unique := make([]map[string]any, 0, len(filteredCredits))
+	seen := make(map[float64]bool)
+	for _, credit := range filteredCredits {
+		id, _ := credit["id"].(float64)
+		if !seen[id] {
+			unique = append(unique, credit)
+			seen[id] = true
+		}
+		if len(unique) == 20 {
+			break
+		}
+	}
+
+	return unique
+}
+
+func FormatCreditsReleaseDate(list []map[string]any) []map[string]any {
+	var result []map[string]any
+
+	for _, credit := range list {
+		mediaType, _ := credit["media_type"].(string)
+		newCredit := make(map[string]any)
+		for k, v := range credit {
+			newCredit[k] = v
+		}
+		if mediaType == "tv" {
+			if firstAirDate, ok := credit["first_air_date"].(string); ok {
+				newCredit["release_date"] = firstAirDate
+			}
+		}
+		result = append(result, newCredit)
+	}
+
+	var filtered []map[string]any
+	for _, credit := range result {
+		releaseDate, _ := credit["release_date"].(string)
+		if releaseDate != "" {
+			filtered = append(filtered, credit)
+		}
+	}
+
+	sort.Slice(filtered, func(i, j int) bool {
+		dateI, _ := filtered[i]["release_date"].(string)
+		dateJ, _ := filtered[j]["release_date"].(string)
+		return dateI > dateJ
+	})
+
+	return filtered
+}
