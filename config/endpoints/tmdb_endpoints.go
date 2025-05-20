@@ -23,6 +23,10 @@ var TmdbEndpoint = struct {
 	Movie struct {
 		Videos func(id int) string
 	}
+	TopRated struct {
+		Movies string
+		TV     string
+	}
 	Search struct {
 		Multi string
 	}
@@ -55,6 +59,13 @@ var TmdbEndpoint = struct {
 	}{
 		Movies: TRENDING + "/movie/week",
 		TV:     TRENDING + "/tv/week",
+	},
+	TopRated: struct {
+		Movies string
+		TV     string
+	}{
+		Movies: DISCOVER + "/movie?sort_by=popularity.desc&vote_average.gte=8&vote_count.gte=500",
+		TV:     DISCOVER + "/tv?sort_by=popularity.desc&vote_average.gte=8&vote_count.gte=500",
 	},
 	Movie: struct {
 		Videos func(id int) string

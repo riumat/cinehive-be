@@ -35,8 +35,10 @@ func GetTrendingContent(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"error": false,
 		"data": fiber.Map{
-			"movies": data["movies"],
-			"tv":     data["tv"],
+			"trendingMovies": data["trendingMovies"],
+			"trendingTv":     data["trendingTv"],
+			"topRatedMovies": data["topRatedMovies"],
+			"topRatedTv":     data["topRatedTv"],
 		},
 	})
 }
