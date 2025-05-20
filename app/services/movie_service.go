@@ -30,9 +30,9 @@ func FetchFeaturedMovie(client *config.TMDBClient) (any, error) {
 	return data.Results[0], nil
 }
 
-func FetchMovieHeaderDetails(client *config.TMDBClient, id string) (any, error) {
+func FetchMovieDetails(client *config.TMDBClient, id string) (any, error) {
 	var g errgroup.Group
-	var details, images map[string]any
+	var details map[string]any
 	var providers Provider
 
 	providerParams := map[string]string{
@@ -40,7 +40,7 @@ func FetchMovieHeaderDetails(client *config.TMDBClient, id string) (any, error) 
 	}
 
 	g.Go(func() error {
-		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(MOVIE, id, []string{"external_ids"}), nil)
+		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(MOVIE, id, []string{"external_ids", "credits"}), nil)
 		if err != nil {
 			return err
 		}
@@ -57,32 +57,13 @@ func FetchMovieHeaderDetails(client *config.TMDBClient, id string) (any, error) 
 		return nil
 	})
 
-	g.Go(func() error {
-		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Images(MOVIE, id), nil)
-		if err != nil {
-			return err
-		}
-		images = results
-		return nil
-	})
-
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 
 	details["providers"] = providers.IT.Flatrate
-	details["images"] = images
 
 	return details, nil
-}
-
-func FetchMovieOverviewDetails(client *config.TMDBClient, id string) (any, error) {
-	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(MOVIE, id, []string{"credits"}), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return results, nil
 }
 
 func FetchMovieCastDetails(client *config.TMDBClient, id string) ([]types.CastItem, error) {

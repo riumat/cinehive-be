@@ -6,7 +6,7 @@ import (
 	"github.com/riumat/cinehive-be/config"
 )
 
-func GetMovieHeader(c *fiber.Ctx) error {
+func GetMovieDetails(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -15,30 +15,7 @@ func GetMovieHeader(c *fiber.Ctx) error {
 		})
 	}
 	client := config.NewTMDBClient()
-	data, err := services.FetchMovieHeaderDetails(client, id)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
-	}
-
-	return c.JSON(fiber.Map{
-		"error": false,
-		"data":  data,
-	})
-}
-
-func GetMovieOverview(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   "Movie ID is required",
-		})
-	}
-	client := config.NewTMDBClient()
-	data, err := services.FetchMovieOverviewDetails(client, id)
+	data, err := services.FetchMovieDetails(client, id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,

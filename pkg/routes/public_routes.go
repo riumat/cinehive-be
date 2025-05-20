@@ -21,8 +21,7 @@ func PublicRoutes(a *fiber.App) {
 
 	route.Get("/movie/featured", controllers.GetFeaturedMovie)
 
-	route.Get("/movie/:id/header", controllers.GetMovieHeader)
-	route.Get("/movie/:id/overview", controllers.GetMovieOverview)
+	route.Get("/movie/:id/details", controllers.GetMovieDetails)
 	route.Get("/movie/:id/cast", controllers.GetMovieCast)
 	route.Get("/movie/:id/crew", controllers.GetMovieCrew)
 	route.Get("/movie/:id/videos", controllers.GetMovieVideos)
