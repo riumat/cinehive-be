@@ -4,14 +4,9 @@ import (
 	"slices"
 	"sort"
 	"strings"
-)
 
-type CrewItem struct {
-	ID          float64 `json:"id"`
-	Name        string  `json:"name"`
-	ProfilePath string  `json:"profile_path"`
-	Job         string  `json:"job"`
-}
+	"github.com/riumat/cinehive-be/pkg/utils/types"
+)
 
 type VideoItem struct {
 	ID       float64 `json:"id"`
@@ -58,7 +53,7 @@ func FormatVideoList(videos []any) ([]any, []any) {
 	return trailers, others
 }
 
-func FormatMovieCrewList(crew []any) []CrewItem {
+func FormatMovieCrewList(crew []any) []types.CrewItem {
 	var filteredCrew []any
 
 	// filter
@@ -79,7 +74,7 @@ func FormatMovieCrewList(crew []any) []CrewItem {
 	}
 
 	// combine
-	crewMap := make(map[string]CrewItem)
+	crewMap := make(map[string]types.CrewItem)
 	for _, member := range filteredCrew {
 		memberMap, ok := member.(map[string]any)
 		if !ok {
@@ -103,7 +98,7 @@ func FormatMovieCrewList(crew []any) []CrewItem {
 			}
 			crewMap[name] = existingMember
 		} else {
-			crewMap[name] = CrewItem{
+			crewMap[name] = types.CrewItem{
 				ID:          id,
 				Name:        name,
 				ProfilePath: profilePath,
@@ -112,7 +107,7 @@ func FormatMovieCrewList(crew []any) []CrewItem {
 		}
 	}
 
-	var formattedCrew []CrewItem
+	var formattedCrew []types.CrewItem
 	for _, member := range crewMap {
 		formattedCrew = append(formattedCrew, member)
 	}
@@ -134,7 +129,7 @@ func FormatMovieCrewList(crew []any) []CrewItem {
 	return formattedCrew
 }
 
-func FormatCrewTvList(crew []any) []CrewItem {
+func FormatCrewTvList(crew []any) []types.CrewItem {
 	var filteredCrew []any
 
 	// filter
@@ -197,7 +192,7 @@ func FormatCrewTvList(crew []any) []CrewItem {
 		filteredCrew[i] = memberMap
 	}
 
-	var formattedCrew []CrewItem
+	var formattedCrew []types.CrewItem
 	for _, member := range filteredCrew {
 		memberMap, ok := member.(map[string]any)
 		if !ok {
@@ -209,7 +204,7 @@ func FormatCrewTvList(crew []any) []CrewItem {
 		profilePath, _ := memberMap["profile_path"].(string)
 		job, _ := memberMap["job"].(string)
 
-		formattedCrew = append(formattedCrew, CrewItem{
+		formattedCrew = append(formattedCrew, types.CrewItem{
 			ID:          id,
 			Name:        name,
 			ProfilePath: profilePath,

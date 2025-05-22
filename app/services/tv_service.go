@@ -1,11 +1,14 @@
 package services
 
 import (
+	"encoding/json"
+
 	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/config/endpoints"
 	"github.com/riumat/cinehive-be/pkg/utils"
 	"github.com/riumat/cinehive-be/pkg/utils/helpers"
 	"github.com/riumat/cinehive-be/pkg/utils/types"
+	"github.com/riumat/cinehive-be/pkg/utils/types/api"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -21,9 +24,9 @@ const (
 	TV = "tv"
 )
 
-func FetchTvHeaderDetails(client *config.TMDBClient, id string) (any, error) {
+func FetchTvDetails(client *config.TMDBClient, id string) (api.DetailsResponse, error) {
 	var g errgroup.Group
-	var details, images map[string]any
+	var details map[string]any
 	var providers Provider
 
 	providerParams := map[string]string{
@@ -31,7 +34,7 @@ func FetchTvHeaderDetails(client *config.TMDBClient, id string) (any, error) {
 	}
 
 	g.Go(func() error {
-		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(TV, id, []string{"external_ids"}), nil)
+		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(TV, id, []string{"external_ids", "aggregate_credits", "recommendations", "videos"}), nil)
 		if err != nil {
 			return err
 		}
@@ -48,73 +51,103 @@ func FetchTvHeaderDetails(client *config.TMDBClient, id string) (any, error) {
 		return nil
 	})
 
-	g.Go(func() error {
-		results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Images(TV, id), nil)
-		if err != nil {
-			return err
-		}
-		images = results
-		return nil
-	})
-
 	if err := g.Wait(); err != nil {
-		return nil, err
+		return api.DetailsResponse{}, err
 	}
 
 	details["providers"] = providers.IT.Flatrate
-	details["images"] = images
+	details["credits"] = details["aggregate_credits"]
 
-	return details, nil
+	if recs, ok := details["recommendations"].(map[string]any); ok {
+		details["recommendations"] = recs["results"]
+	}
+	if videos, ok := details["videos"].(map[string]any); ok {
+		trailers, _ := utils.FormatVideoList(videos["results"].([]any))
+		details["videos"] = trailers
+	}
+
+	jsonBytes, err := json.Marshal(details)
+	if err != nil {
+		return api.DetailsResponse{}, err
+	}
+
+	var resp api.DetailsResponse
+	if err := json.Unmarshal(jsonBytes, &resp); err != nil {
+		return api.DetailsResponse{}, err
+	}
+
+	return resp, nil
 }
 
-func FetchTvOverviewDetails(client *config.TMDBClient, id string) (any, error) {
-	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(TV, id, []string{"credits"}), nil)
+func FetchTvCastDetails(client *config.TMDBClient, id string) (api.CastResponse, error) {
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(TV, id, []string{"aggregate_credits"}), nil)
+
 	if err != nil {
-		return nil, err
+		return api.CastResponse{}, err
 	}
 
-	return results, nil
+	var castItems []types.CastItemWithCharacter
+	if credits, ok := results["aggregate_credits"].(map[string]any); ok {
+		if castArr, ok := credits["cast"].([]any); ok {
+			castItems = helpers.ExtractCastItems(castArr)
+		}
+	}
+
+	results["cast"] = castItems
+
+	jsonBytes, err := json.Marshal(results)
+	if err != nil {
+		return api.CastResponse{}, err
+	}
+
+	var resp api.CastResponse
+	if err := json.Unmarshal(jsonBytes, &resp); err != nil {
+		return api.CastResponse{}, err
+	}
+
+	return resp, nil
 }
 
-func FetchTvCastDetails(client *config.TMDBClient, id string) ([]types.CastItem, error) {
-	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Credits(TV, id, "aggregate_credits"), nil)
+func FetchTvCrewDetails(client *config.TMDBClient, id string) (api.CrewResponse, error) {
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(TV, id, []string{"aggregate_credits"}), nil)
+
 	if err != nil {
-		return nil, err
+		return api.CrewResponse{}, err
 	}
 
-	cast, ok := results["cast"].([]any)
-	if !ok {
-		return nil, nil
+	var crewItems []types.CrewItem
+	if credits, ok := results["aggregate_credits"].(map[string]any); ok {
+		if crewArr, ok := credits["crew"].([]any); ok {
+			crewItems = utils.FormatCrewTvList(crewArr)
+		}
 	}
 
-	return helpers.ExtractCastItems(cast), nil
+	results["crew"] = crewItems
+
+	jsonBytes, err := json.Marshal(results)
+	if err != nil {
+		return api.CrewResponse{}, err
+	}
+
+	var resp api.CrewResponse
+	if err := json.Unmarshal(jsonBytes, &resp); err != nil {
+		return api.CrewResponse{}, err
+	}
+
+	return resp, nil
 }
 
-func FetchTvCrewDetails(client *config.TMDBClient, id string) (any, error) {
-	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Credits(TV, id, "aggregate_credits"), nil)
+func FetchTvVideos(client *config.TMDBClient, id string) (api.VideoResponse, error) {
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(TV, id, []string{"videos"}), nil)
+
 	if err != nil {
-		return nil, err
+		return api.VideoResponse{}, err
 	}
 
-	crew, ok := results["crew"].([]any)
-	if !ok {
-		return crew, nil
-	}
-
-	formattedCrew := utils.FormatCrewTvList(crew)
-
-	return formattedCrew, nil
-}
-
-func FetchTvVideos(client *config.TMDBClient, id string) (any, error) {
-	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.Videos(TV, id), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	videos, ok := results["results"].([]any)
-	if !ok {
-		return nil, nil
+	if videos, ok := results["videos"].(map[string]any); ok {
+		if res, ok := videos["results"].([]any); ok {
+			results["videos"] = res
+		}
 	}
 
 	type MovieVideos struct {
@@ -122,30 +155,69 @@ func FetchTvVideos(client *config.TMDBClient, id string) (any, error) {
 		Others   []any `json:"others"`
 	}
 
-	trailers, others := utils.FormatVideoList(videos)
+	trailers, others := utils.FormatVideoList(results["videos"].([]any))
 
 	movieVideos := MovieVideos{
 		Trailers: trailers,
 		Others:   others,
 	}
 
-	return movieVideos, nil
-}
+	results["videos"] = movieVideos
 
-func FetchTvRecommendations(client *config.TMDBClient, id string) (any, error) {
-	results, err := HttpGet[utils.Response[[]Tv]](client, endpoints.TmdbEndpoint.DynamicContent.Recommendations(TV, id), nil)
+	jsonBytes, err := json.Marshal(results)
 	if err != nil {
-		return nil, err
+		return api.VideoResponse{}, err
 	}
 
-	return results.Results, nil
+	var resp api.VideoResponse
+	if err := json.Unmarshal(jsonBytes, &resp); err != nil {
+		return api.VideoResponse{}, err
+	}
+
+	return resp, nil
 }
 
-func FetchTvSeasons(client *config.TMDBClient, id string) (any, error) {
+func FetchTvRecommendations(client *config.TMDBClient, id string) (api.RecommendationsResponse, error) {
+	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.AllWithAppend(TV, id, []string{"recommendations"}), nil)
+
+	if err != nil {
+		return api.RecommendationsResponse{}, err
+	}
+
+	if recs, ok := results["recommendations"].(map[string]any); ok {
+		if res, ok := recs["results"].([]any); ok {
+			results["recommendations"] = res
+		}
+	}
+
+	jsonBytes, err := json.Marshal(results)
+	if err != nil {
+		return api.RecommendationsResponse{}, err
+	}
+
+	var resp api.RecommendationsResponse
+	if err := json.Unmarshal(jsonBytes, &resp); err != nil {
+		return api.RecommendationsResponse{}, err
+	}
+
+	return resp, nil
+}
+
+func FetchTvSeasons(client *config.TMDBClient, id string) (api.SeasonResponse, error) {
 	results, err := HttpGet[map[string]any](client, endpoints.TmdbEndpoint.DynamicContent.All(TV, id), nil)
 	if err != nil {
-		return nil, err
+		return api.SeasonResponse{}, err
 	}
 
-	return results["seasons"], nil
+	jsonBytes, err := json.Marshal(results)
+	if err != nil {
+		return api.SeasonResponse{}, err
+	}
+
+	var resp api.SeasonResponse
+	if err := json.Unmarshal(jsonBytes, &resp); err != nil {
+		return api.SeasonResponse{}, err
+	}
+
+	return resp, nil
 }

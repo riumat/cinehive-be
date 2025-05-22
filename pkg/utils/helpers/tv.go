@@ -6,8 +6,8 @@ import (
 	"github.com/riumat/cinehive-be/pkg/utils/types"
 )
 
-func ExtractCastItems(cast []any) []types.CastItem {
-	var castItems []types.CastItem
+func ExtractCastItems(cast []any) []types.CastItemWithCharacter {
+	var castItems []types.CastItemWithCharacter
 
 	for _, item := range cast {
 		castMap, ok := item.(map[string]any)
@@ -15,7 +15,7 @@ func ExtractCastItems(cast []any) []types.CastItem {
 			continue
 		}
 
-		castItem := types.CastItem{
+		castItem := types.CastItemWithCharacter{
 			ID:          getFloat64Value(castMap, "id"),
 			Name:        getStringValue(castMap, "name"),
 			ProfilePath: getStringValue(castMap, "profile_path"),
