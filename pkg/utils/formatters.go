@@ -53,7 +53,7 @@ func FormatVideoList(videos []any) ([]any, []any) {
 	return trailers, others
 }
 
-func FormatMovieCrewList(crew []any) []types.CrewItem {
+func FormatMovieCrewList(crew []any) []types.CrewMember {
 	var filteredCrew []any
 
 	// filter
@@ -74,7 +74,7 @@ func FormatMovieCrewList(crew []any) []types.CrewItem {
 	}
 
 	// combine
-	crewMap := make(map[string]types.CrewItem)
+	crewMap := make(map[string]types.CrewMember)
 	for _, member := range filteredCrew {
 		memberMap, ok := member.(map[string]any)
 		if !ok {
@@ -98,7 +98,7 @@ func FormatMovieCrewList(crew []any) []types.CrewItem {
 			}
 			crewMap[name] = existingMember
 		} else {
-			crewMap[name] = types.CrewItem{
+			crewMap[name] = types.CrewMember{
 				ID:          id,
 				Name:        name,
 				ProfilePath: profilePath,
@@ -107,7 +107,7 @@ func FormatMovieCrewList(crew []any) []types.CrewItem {
 		}
 	}
 
-	var formattedCrew []types.CrewItem
+	var formattedCrew []types.CrewMember
 	for _, member := range crewMap {
 		formattedCrew = append(formattedCrew, member)
 	}
@@ -129,7 +129,7 @@ func FormatMovieCrewList(crew []any) []types.CrewItem {
 	return formattedCrew
 }
 
-func FormatCrewTvList(crew []any) []types.CrewItem {
+func FormatCrewTvList(crew []any) []types.CrewMember {
 	var filteredCrew []any
 
 	// filter
@@ -192,7 +192,7 @@ func FormatCrewTvList(crew []any) []types.CrewItem {
 		filteredCrew[i] = memberMap
 	}
 
-	var formattedCrew []types.CrewItem
+	var formattedCrew []types.CrewMember
 	for _, member := range filteredCrew {
 		memberMap, ok := member.(map[string]any)
 		if !ok {
@@ -204,7 +204,7 @@ func FormatCrewTvList(crew []any) []types.CrewItem {
 		profilePath, _ := memberMap["profile_path"].(string)
 		job, _ := memberMap["job"].(string)
 
-		formattedCrew = append(formattedCrew, types.CrewItem{
+		formattedCrew = append(formattedCrew, types.CrewMember{
 			ID:          id,
 			Name:        name,
 			ProfilePath: profilePath,

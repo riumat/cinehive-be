@@ -5,39 +5,32 @@ import (
 
 	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/config/endpoints"
-	"github.com/riumat/cinehive-be/pkg/utils"
+	"github.com/riumat/cinehive-be/pkg/dto"
 	"github.com/riumat/cinehive-be/pkg/utils/types"
 )
 
-type SearchResult struct {
-	Results      []any `json:"results"`
-	TotalPages   int   `json:"total_pages"`
-	TotalResults int   `json:"total_results"`
-	Page         int   `json:"page"`
-}
-
-func FetchSearchResults(client *config.TMDBClient, query, page string) (utils.PaginatedResponse[[]any], error) {
+func FetchSearchResults(client *config.TMDBClient, query, page string) (dto.SearchDto, error) {
 	queryParams := map[string]string{
 		"query": query,
 		"page":  page,
 	}
 
-	resp, err := HttpGet[utils.PaginatedResponse[[]any]](client, endpoints.TmdbEndpoint.Search.Multi, queryParams)
+	resp, err := HttpGet[dto.SearchDto](client, endpoints.TmdbEndpoint.Search.Multi, queryParams)
 	if err != nil {
-		return utils.PaginatedResponse[[]any]{}, fmt.Errorf("failed to fetch data from TMDB: %w", err)
+		return dto.SearchDto{}, nil
 	}
 
 	return resp, nil
 }
 
-func FetchSearchWithFilters(client *config.TMDBClient, params types.FilterParams, media string) (utils.PaginatedResponse[[]any], error) {
+func FetchSearchWithFilters(client *config.TMDBClient, params types.FilterParams, media string) (dto.SearchDto, error) {
 	var release string
 	if media == "movie" {
 		release = "release_date"
 	} else if media == "tv" {
 		release = "first_air_date"
 	} else {
-		return utils.PaginatedResponse[[]any]{}, fmt.Errorf("invalid media type")
+		return dto.SearchDto{}, fmt.Errorf("invalid media type")
 	}
 
 	queryParams := map[string]string{
@@ -54,9 +47,9 @@ func FetchSearchWithFilters(client *config.TMDBClient, params types.FilterParams
 		"watch_region":                 "IT",
 	}
 
-	resp, err := HttpGet[utils.PaginatedResponse[[]any]](client, endpoints.TmdbEndpoint.Discover.All(media), queryParams)
+	resp, err := HttpGet[dto.SearchDto](client, endpoints.TmdbEndpoint.Discover.All(media), queryParams)
 	if err != nil {
-		return utils.PaginatedResponse[[]any]{}, fmt.Errorf("failed to fetch filtered content from TMDB: %w", err)
+		return dto.SearchDto{}, nil
 	}
 
 	return resp, nil
