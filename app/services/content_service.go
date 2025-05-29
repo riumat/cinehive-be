@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/config/endpoints"
 	"github.com/riumat/cinehive-be/pkg/dto"
@@ -71,4 +73,25 @@ func FetchLandingCards(client *config.TMDBClient) (dto.HomeListsDto, error) {
 		TopRatedMovies: topRatedMovies,
 		TopRatedTv:     topRatedTvShows,
 	}, nil
+}
+
+func AddUserContent(client *config.SupabaseClient, userId string, contentId float64, mediaType string) (int, error) {
+	endpoint := "/rest/v1/content"
+
+	body := map[string]any{
+		"user_id":      userId,
+		"content_id":   contentId,
+		"content_type": mediaType,
+	}
+
+	resp, err := client.Post(endpoint, nil, body)
+	if resp == nil {
+		return 500, fmt.Errorf("failed to send request: %w", err)
+	}
+	if err != nil {
+		return resp.StatusCode, fmt.Errorf("%w", err)
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
 }

@@ -14,12 +14,31 @@ func GetTvDetails(c *fiber.Ctx) error {
 			"msg":   "Movie ID is required",
 		})
 	}
-	client := config.NewTMDBClient()
-	data, err := services.FetchTvDetails(client, id)
+	tmdbClient := config.NewTMDBClient()
+	data, err := services.FetchTvDetails(tmdbClient, id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
+		})
+	}
+
+	token := c.Locals("token")
+
+	if token != nil {
+		user := c.Locals("user_id").(string)
+		supabaseClient := config.NewSupabaseClient(token.(string))
+		userData, err := services.FetchContentUserData(supabaseClient, user, data.Id, "tv")
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": true,
+				"msg":   "Failed to fetch user data" + err.Error(),
+			})
+		}
+
+		return c.JSON(fiber.Map{
+			"data":      data,
+			"user_data": userData,
 		})
 	}
 
