@@ -75,16 +75,104 @@ func FetchLandingCards(client *config.TMDBClient) (dto.HomeListsDto, error) {
 	}, nil
 }
 
-func AddUserContent(client *config.SupabaseClient, userId string, contentId float64, mediaType string) (int, error) {
+func AddUserContent(client *config.SupabaseClient, userId string, contentId string, mediaType string) (int, error) {
 	endpoint := "/rest/v1/content"
 
-	body := map[string]any{
+	body := map[string]string{
 		"user_id":      userId,
 		"content_id":   contentId,
 		"content_type": mediaType,
 	}
 
 	resp, err := client.Post(endpoint, nil, body)
+	if resp == nil {
+		return 500, fmt.Errorf("failed to send request: %w", err)
+	}
+	if err != nil {
+		return resp.StatusCode, fmt.Errorf("%w", err)
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
+}
+
+func AddUserContentWatchlist(client *config.SupabaseClient, userId string, contentId string, mediaType string) (int, error) {
+	endpoint := "/rest/v1/watchlist"
+
+	body := map[string]string{
+		"user_id":      userId,
+		"content_id":   contentId,
+		"content_type": mediaType,
+	}
+
+	resp, err := client.Post(endpoint, nil, body)
+	if resp == nil {
+		return 500, fmt.Errorf("failed to send request: %w", err)
+	}
+	if err != nil {
+		return resp.StatusCode, fmt.Errorf("%w", err)
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
+}
+
+func EditRating(client *config.SupabaseClient, userId string, contentId string, contentType string, rating float64) (int, error) {
+	endpoint := "/rest/v1/content"
+
+	body := map[string]any{
+		"rating": rating,
+	}
+
+	queryParams := map[string]string{
+		"user_id":      fmt.Sprintf("eq.%s", userId),
+		"content_id":   fmt.Sprintf("eq.%s", contentId),
+		"content_type": fmt.Sprintf("eq.%s", contentType),
+	}
+
+	resp, err := client.Patch(endpoint, queryParams, body)
+	if resp == nil {
+		return 500, fmt.Errorf("failed to send request: %w", err)
+	}
+	if err != nil {
+		return resp.StatusCode, fmt.Errorf("%w", err)
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
+}
+
+func DeleteUserContent(client *config.SupabaseClient, userId string, contentId string, contentType string) (int, error) {
+	endpoint := "/rest/v1/content"
+
+	queryParams := map[string]string{
+		"user_id":      fmt.Sprintf("eq.%s", userId),
+		"content_id":   fmt.Sprintf("eq.%s", contentId),
+		"content_type": fmt.Sprintf("eq.%s", contentType),
+	}
+
+	resp, err := client.Delete(endpoint, queryParams, nil)
+	if resp == nil {
+		return 500, fmt.Errorf("failed to send request: %w", err)
+	}
+	if err != nil {
+		return resp.StatusCode, fmt.Errorf("%w", err)
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
+}
+
+func DeleteUserContentWatchlist(client *config.SupabaseClient, userId string, contentId string, contentType string) (int, error) {
+	endpoint := "/rest/v1/watchlist"
+
+	queryParams := map[string]string{
+		"user_id":      fmt.Sprintf("eq.%s", userId),
+		"content_id":   fmt.Sprintf("eq.%s", contentId),
+		"content_type": fmt.Sprintf("eq.%s", contentType),
+	}
+
+	resp, err := client.Delete(endpoint, queryParams, nil)
 	if resp == nil {
 		return 500, fmt.Errorf("failed to send request: %w", err)
 	}

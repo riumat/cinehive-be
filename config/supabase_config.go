@@ -35,6 +35,13 @@ func (client *SupabaseClient) Post(endpoint string, queryParams map[string]strin
 	return client.request(http.MethodPost, endpoint, queryParams, body)
 }
 
+func (client *SupabaseClient) Patch(endpoint string, queryParams map[string]string, body any) (*http.Response, error) {
+	return client.request(http.MethodPatch, endpoint, queryParams, body)
+}
+func (client *SupabaseClient) Delete(endpoint string, queryParams map[string]string, body any) (*http.Response, error) {
+	return client.request(http.MethodDelete, endpoint, queryParams, nil)
+}
+
 func (client *SupabaseClient) request(method, endpoint string, queryParams map[string]string, body any) (*http.Response, error) {
 	fullURL, err := url.Parse(fmt.Sprintf("%s%s", client.BaseURL, endpoint))
 	if err != nil {
