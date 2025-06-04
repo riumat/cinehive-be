@@ -22,16 +22,18 @@ func PublicRoutes(a *fiber.App) {
 	route.Get("/search", controllers.GetSearchResults)
 	route.Get("/search/filters", controllers.GetSearchWithFilters)
 
-	route.Get("/movie/:id/details", middleware.AuthMiddleware(), controllers.GetMovieDetails)
+	route.Get("/movie/:id", controllers.GetMovieDetails)
 
-	route.Get("/tv/:id/details", middleware.AuthMiddleware(), controllers.GetTvDetails)
+	route.Get("/tv/:id", controllers.GetTvDetails)
 
 	route.Get("/person/:id", controllers.GetPersonDetails)
 
+	route.Get("/user/movie/:id", middleware.AuthMiddleware(), controllers.GetUserMovieDetails)
 	route.Post("/user/movie/:id", middleware.AuthMiddleware(), usercontrollers.AddUserMovie)
 	route.Patch("/user/movie/:id", middleware.AuthMiddleware(), usercontrollers.EditUserMovie)
 	route.Delete("/user/movie/:id", middleware.AuthMiddleware(), usercontrollers.DeleteUserMovie)
 
+	route.Get("/user/tv/:id", middleware.AuthMiddleware(), controllers.GetUserTvDetails)
 	route.Post("/user/tv/:id", middleware.AuthMiddleware(), usercontrollers.AddUserTv)
 	route.Patch("/user/tv/:id", middleware.AuthMiddleware(), usercontrollers.EditUserTv)
 	route.Delete("/user/tv/:id", middleware.AuthMiddleware(), usercontrollers.DeleteUserTv)

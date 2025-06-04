@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"strconv"
 
 	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/config/endpoints"
@@ -14,22 +13,22 @@ import (
 )
 
 type ReturnType struct {
-	Watch     bool  `json:"watch"`
-	Rating    *int8 `json:"rating"`
-	Watchlist bool  `json:"watchlist"`
+	Watch     bool    `json:"watch"`
+	Rating    float64 `json:"rating"`
+	Watchlist bool    `json:"watchlist"`
 }
 
-func FetchContentUserData(client *config.SupabaseClient, userId string, contentID float64, contentType string) (*ReturnType, error) {
+func FetchContentUserData(client *config.SupabaseClient, userId string, contentID string, contentType string) (*ReturnType, error) {
 	queryParams := map[string]string{
 		"user_id":      fmt.Sprintf("eq.%s", userId),
-		"content_id":   fmt.Sprintf("eq.%s", strconv.FormatFloat(contentID, 'f', -1, 64)),
+		"content_id":   fmt.Sprintf("eq.%s", contentID),
 		"content_type": fmt.Sprintf("eq.%s", contentType),
 		"select":       "*",
 	}
 
 	var watched bool
 	var watchlisted bool
-	var rating *int8
+	var rating float64
 
 	g, _ := errgroup.WithContext(context.Background())
 
@@ -54,9 +53,9 @@ func FetchContentUserData(client *config.SupabaseClient, userId string, contentI
 			log.Println("FetchUserMovieData content results:", results)
 			r := results[0].(map[string]any)["rating"]
 			if r != nil {
-				rating = r.(*int8)
+				rating = r.(float64)
 			} else {
-				rating = nil
+				rating = 0
 			}
 		} else {
 			watched = false

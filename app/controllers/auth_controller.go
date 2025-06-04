@@ -2,6 +2,7 @@ package controllers
 
 import (
 	/* "context" */
+
 	"time"
 
 	/* "github.com/create-go-app/fiber-go-template/platform/cache" */
@@ -17,6 +18,7 @@ import (
 func SupabaseUserSignUp(c *fiber.Ctx) error {
 	type SignUpInput struct {
 		Email    string `json:"email" validate:"required,email"`
+		Username string `json:"username" validate:"required,min=3,max=30"`
 		Password string `json:"password" validate:"required,min=6"`
 	}
 
@@ -38,12 +40,35 @@ func SupabaseUserSignUp(c *fiber.Ctx) error {
 
 	data, err := services.SignUpWithSupabase(input.Email, input.Password)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		if data.Code == 409 {
+			return c.Status(data.Code).JSON(fiber.Map{
+				"error": true,
+				"msg":   "User already exists",
+			})
+		}
+		if data.Code == 422 {
+			return c.Status(data.Code).JSON(fiber.Map{
+				"error": true,
+				"msg":   "Invalid email or already registered",
+			})
+		}
+		if data.Code == 400 {
+			return c.Status(data.Code).JSON(fiber.Map{
+				"error": true,
+				"msg":   "Invalid input data",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
 		})
 	}
-
+	if err := services.AddUserToProfile(data.User.ID, input.Username); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Failed to add user to profile: " + err.Error(),
+		})
+	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"error": false,
 		"msg":   "User registered successfully",
@@ -64,16 +89,6 @@ func SupabaseUserSignIn(c *fiber.Ctx) error {
 			"msg":   "Invalid input data",
 		})
 	}
-
-	// (Opzionale) Validazione dei campi
-	validate := utils.NewValidator()
-	if err := validate.Struct(input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   utils.ValidatorErrors(err),
-		})
-	}
-
 	data, err := services.SignInWithSupabase(input.Email, input.Password)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -82,9 +97,14 @@ func SupabaseUserSignIn(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(fiber.Map{
+	if data.Code == 400 {
+		return c.Status(data.Code).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Wrong credentials",
+		})
+	}
+	return c.Status(data.Code).JSON(fiber.Map{
 		"error": false,
-		"msg":   "Login successful",
 		"data":  data,
 	})
 }

@@ -23,27 +23,40 @@ func GetTvDetails(c *fiber.Ctx) error {
 		})
 	}
 
+	return c.JSON(fiber.Map{
+		"error": false,
+		"data":  data,
+	})
+}
+
+func GetUserTvDetails(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": true,
+			"msg":   "TV ID is required",
+		})
+	}
 	token := c.Locals("token")
+	if token == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Unauthorized",
+		})
+	}
 
-	if token != nil {
-		user := c.Locals("user_id").(string)
-		supabaseClient := config.NewSupabaseClient(token.(string))
-		userData, err := services.FetchContentUserData(supabaseClient, user, data.Id, "tv")
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": true,
-				"msg":   "Failed to fetch user data" + err.Error(),
-			})
-		}
-
-		return c.JSON(fiber.Map{
-			"data":      data,
-			"user_data": userData,
+	user := c.Locals("user_id").(string)
+	supabaseClient := config.NewSupabaseClient(token.(string))
+	data, err := services.FetchContentUserData(supabaseClient, user, id, "tv")
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Failed to fetch user TV details: " + err.Error(),
 		})
 	}
 
 	return c.JSON(fiber.Map{
-		"error": false,
 		"data":  data,
+		"error": false,
 	})
 }
