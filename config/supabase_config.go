@@ -72,7 +72,7 @@ func (client *SupabaseClient) request(method, endpoint string, queryParams map[s
 
 	headers := map[string]string{
 		"apikey": os.Getenv("SUPABASE_ANON_KEY"),
-		"Prefer": "return=minimal",
+		"Prefer": "resolution=merge-duplicates,return=representation",
 	}
 	if client.ApiKey != "" {
 		headers["Authorization"] = "Bearer " + client.ApiKey

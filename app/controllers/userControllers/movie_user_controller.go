@@ -21,7 +21,33 @@ func AddUserMovie(c *fiber.Ctx) error {
 
 	contentId := c.Params("id")
 
-	code, message := services.AddUserContent(client, userID, contentId, "movie")
+	var input struct {
+		Title        string    `json:"title"`
+		BackdropPath string    `json:"backdrop_path"`
+		PosterPath   string    `json:"poster_path"`
+		ReleaseDate  string    `json:"release_date"`
+		Duration     float64   `json:"duration"`
+		Genres       []float64 `json:"genres"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Invalid input data",
+		})
+	}
+
+	contentInfo := services.ContentInfo{
+		Title:        input.Title,
+		ContentID:    contentId,
+		ContentType:  "movie",
+		BackdropPath: input.BackdropPath,
+		PosterPath:   input.PosterPath,
+		ReleaseDate:  input.ReleaseDate,
+		Duration:     input.Duration,
+		Genres:       input.Genres,
+	}
+
+	code, message := services.AddUserContent(client, userID, contentInfo)
 
 	if message != nil || code != 201 {
 		return c.Status(code).JSON(fiber.Map{
@@ -51,7 +77,33 @@ func AddUserMovieWatchlist(c *fiber.Ctx) error {
 
 	contentId := c.Params("id")
 
-	code, message := services.AddUserContentWatchlist(client, userID, contentId, "movie")
+	var input struct {
+		Title        string    `json:"title"`
+		BackdropPath string    `json:"backdrop_path"`
+		PosterPath   string    `json:"poster_path"`
+		ReleaseDate  string    `json:"release_date"`
+		Duration     float64   `json:"duration"`
+		Genres       []float64 `json:"genres"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Invalid input data",
+		})
+	}
+
+	contentInfo := services.ContentInfo{
+		Title:        input.Title,
+		ContentID:    contentId,
+		ContentType:  "movie",
+		BackdropPath: input.BackdropPath,
+		PosterPath:   input.PosterPath,
+		ReleaseDate:  input.ReleaseDate,
+		Duration:     input.Duration,
+		Genres:       input.Genres,
+	}
+
+	code, message := services.AddUserContentWatchlist(client, userID, contentInfo)
 
 	if message != nil || code != 201 {
 		return c.Status(code).JSON(fiber.Map{
@@ -93,7 +145,7 @@ func EditUserMovie(c *fiber.Ctx) error {
 		})
 	}
 
-	code, message := services.EditRating(client, userID, contentId, "movie", data.Rating)
+	code, message := services.EditRating(client, userID, contentId, data.Rating)
 
 	if message != nil {
 		return c.Status(code).JSON(fiber.Map{
@@ -123,7 +175,7 @@ func DeleteUserMovie(c *fiber.Ctx) error {
 
 	contentId := c.Params("id")
 
-	code, message := services.DeleteUserContent(client, userID, contentId, "movie")
+	code, message := services.DeleteUserContent(client, userID, contentId)
 
 	if message != nil {
 		return c.Status(code).JSON(fiber.Map{
@@ -153,7 +205,7 @@ func DeleteUserMovieWatchlist(c *fiber.Ctx) error {
 
 	contentId := c.Params("id")
 
-	code, message := services.DeleteUserContentWatchlist(client, userID, contentId, "movie")
+	code, message := services.DeleteUserContentWatchlist(client, userID, contentId)
 
 	if message != nil {
 		return c.Status(code).JSON(fiber.Map{

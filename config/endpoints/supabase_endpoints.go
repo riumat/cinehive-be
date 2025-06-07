@@ -15,6 +15,7 @@ var Supabase = struct {
 		Profiles  string
 		Content   string
 		Watchlist string
+		Watch     string
 	}
 }{
 	Auth: struct {
@@ -30,9 +31,11 @@ var Supabase = struct {
 		Profiles  string
 		Content   string
 		Watchlist string
+		Watch     string
 	}{
 		Profiles:  TABLES_BASE + "/profiles",
 		Content:   TABLES_BASE + "/content",
 		Watchlist: TABLES_BASE + "/watchlist",
+		Watch:     TABLES_BASE + "/watch",
 	},
 }
