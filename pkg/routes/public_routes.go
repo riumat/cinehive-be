@@ -28,6 +28,10 @@ func PublicRoutes(a *fiber.App) {
 
 	route.Get("/person/:id", controllers.GetPersonDetails)
 
+	route.Get("/user/person/:id", middleware.AuthMiddleware(), controllers.GetUserPersonDetails)
+	route.Post("/user/person/:id", middleware.AuthMiddleware(), usercontrollers.AddUserPerson)
+	route.Delete("/user/person/:id", middleware.AuthMiddleware(), usercontrollers.DeleteUserPerson)
+
 	route.Get("/user/movie/:id", middleware.AuthMiddleware(), controllers.GetUserMovieDetails)
 	route.Post("/user/movie/:id", middleware.AuthMiddleware(), usercontrollers.AddUserMovie)
 	route.Patch("/user/movie/:id", middleware.AuthMiddleware(), usercontrollers.EditUserMovie)
