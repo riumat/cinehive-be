@@ -20,6 +20,7 @@ func ExtractCastItems(cast []any) []types.Actor {
 			Name:        getStringValue(castMap, "name"),
 			ProfilePath: getStringValue(castMap, "profile_path"),
 			Character:   extractCharacterFromRoles(castMap),
+			Popularity:  getFloat64Value(castMap, "popularity"),
 		}
 
 		castItems = append(castItems, castItem)

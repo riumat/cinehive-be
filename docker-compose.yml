@@ -1,16 +1,5 @@
 services:
-  postgres:
-    image: postgres:alpine
-    container_name: cinehive_postgres
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_NAME}
-    ports:
-      - "${POSTGRES_PORT}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
+  
   cinehive-be:
     build:
       context: .
@@ -18,25 +7,6 @@ services:
     container_name: cinehive_backend
     env_file:
       - .env
-    environment:
-      - PORT=8000
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_NAME=${POSTGRES_NAME}
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_SECRET_KEY_EXPIRE_MINUTES_COUNT=${JWT_SECRET_KEY_EXPIRE_MINUTES_COUNT}
-      - JWT_REFRESH_KEY=${JWT_REFRESH_KEY}
-      - JWT_REFRESH_KEY_EXPIRE_HOURS_COUNT=${JWT_REFRESH_KEY_EXPIRE_HOURS_COUNT}
-      - TMDB_BASE_URL=${TMDB_BASE_URL}
-      - TMDB_IMAGE_URL=${TMDB_IMAGE_URL}
-      - TMDB_API_KEY=${TMDB_API_KEY}
     ports:
       - "8000:8000"
-    depends_on:
-      - postgres
     restart: unless-stopped
-
-volumes:
-  postgres_data:

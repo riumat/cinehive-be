@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/config/endpoints"
@@ -54,7 +55,6 @@ func FetchContentUserData(client *config.SupabaseClient, userId string, contentI
 	var watched, watchlisted bool
 	var rating float64
 
-	// Cerca userId tra i risultati delle join
 	for _, w := range contentResults[0].Watch {
 		if w.UserID == userId {
 			watched = true
@@ -77,4 +77,88 @@ func FetchContentUserData(client *config.SupabaseClient, userId string, contentI
 		Watchlist: watchlisted,
 		ID:        contentResults[0].ID.(float64),
 	}, nil
+}
+
+func FetchWatchlist(client *config.SupabaseClient, userId string) ([]map[string]any, error) {
+	query := map[string]string{
+		"user_id": fmt.Sprintf("eq.%s", userId),
+		"select":  "id,content!inner(content_id,content_type)",
+	}
+
+	resp, err := client.Get(endpoints.Supabase.Tables.Watchlist, query)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var watchlistResults []struct {
+		ID      any `json:"id"`
+		Content struct {
+			ContentID   float64 `json:"content_id"`
+			ContentType string  `json:"content_type"`
+		} `json:"content"`
+	}
+
+	if err := json.Unmarshal(body, &watchlistResults); err != nil {
+		return nil, err
+	}
+
+	var watchlist []map[string]any
+	for _, item := range watchlistResults {
+		watchlist = append(watchlist, map[string]any{
+			"id":           item.ID,
+			"content_id":   item.Content.ContentID,
+			"content_type": item.Content.ContentType,
+		})
+	}
+
+	log.Println("Fetched watchlist:", watchlist)
+
+	return watchlist, nil
+}
+
+func FetchWatch(client *config.SupabaseClient, userId string) ([]map[string]any, error) {
+	query := map[string]string{
+		"user_id": fmt.Sprintf("eq.%s", userId),
+		"select":  "id,content!inner(content_id,content_type)",
+	}
+
+	resp, err := client.Get(endpoints.Supabase.Tables.Watch, query)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var watchResults []struct {
+		ID      any `json:"id"`
+		Content struct {
+			ContentID   float64 `json:"content_id"`
+			ContentType string  `json:"content_type"`
+		} `json:"content"`
+	}
+
+	if err := json.Unmarshal(body, &watchResults); err != nil {
+		return nil, err
+	}
+
+	var watchlist []map[string]any
+	for _, item := range watchResults {
+		watchlist = append(watchlist, map[string]any{
+			"id":           item.ID,
+			"content_id":   item.Content.ContentID,
+			"content_type": item.Content.ContentType,
+		})
+	}
+
+	return watchlist, nil
 }

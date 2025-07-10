@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"slices"
 	"sort"
 	"strings"
@@ -73,49 +74,38 @@ func FormatMovieCrewList(crew []any) []types.CrewMember {
 		}
 	}
 
-	// combine
-	crewMap := make(map[string]types.CrewMember)
+	var formattedCrew []types.CrewMember
 	for _, member := range filteredCrew {
 		memberMap, ok := member.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		name, ok := memberMap["name"].(string)
-
-		if !ok {
-			continue
-		}
 		id, _ := memberMap["id"].(float64)
+		name, _ := memberMap["name"].(string)
 		profilePath, _ := memberMap["profile_path"].(string)
 		job, _ := memberMap["job"].(string)
+		department, _ := memberMap["department"].(string)
+		popularity, _ := memberMap["popularity"].(float64)
 
-		if existingMember, exists := crewMap[name]; exists {
-			if existingMember.Job != "" {
-				existingMember.Job += ", " + job
-			} else {
-				existingMember.Job = job
-			}
-			crewMap[name] = existingMember
-		} else {
-			crewMap[name] = types.CrewMember{
-				ID:          id,
-				Name:        name,
-				ProfilePath: profilePath,
-				Job:         job,
-			}
-		}
+		formattedCrew = append(formattedCrew, types.CrewMember{
+			ID:          id,
+			Name:        name,
+			ProfilePath: profilePath,
+			Job:         job,
+			Department:  department,
+			Popularity:  popularity,
+		})
 	}
 
-	var formattedCrew []types.CrewMember
-	for _, member := range crewMap {
-		formattedCrew = append(formattedCrew, member)
-	}
+	sort.SliceStable(formattedCrew, func(i, j int) bool {
+		return formattedCrew[i].Popularity > formattedCrew[j].Popularity
+	})
 
 	// sort
 	sort.Slice(formattedCrew, func(i, j int) bool {
-		jobA := strings.Contains(strings.ToLower(formattedCrew[i].Job), "director")
-		jobB := strings.Contains(strings.ToLower(formattedCrew[j].Job), "director")
+		jobA := strings.ToLower(formattedCrew[i].Job) == "director"
+		jobB := strings.ToLower(formattedCrew[j].Job) == "director"
 		if jobA && !jobB {
 			return true
 		}
@@ -203,16 +193,72 @@ func FormatCrewTvList(crew []any) []types.CrewMember {
 		name, _ := memberMap["name"].(string)
 		profilePath, _ := memberMap["profile_path"].(string)
 		job, _ := memberMap["job"].(string)
+		popularity, _ := memberMap["popularity"].(float64)
+		department, _ := memberMap["department"].(string)
 
 		formattedCrew = append(formattedCrew, types.CrewMember{
 			ID:          id,
 			Name:        name,
 			ProfilePath: profilePath,
 			Job:         job,
+			Department:  department,
+			Popularity:  popularity,
 		})
 	}
 
+	sort.Slice(formattedCrew, func(i, j int) bool {
+		jobA := strings.ToLower(formattedCrew[i].Job) == "director"
+		jobB := strings.ToLower(formattedCrew[j].Job) == "director"
+		if jobA && !jobB {
+			return true
+		}
+		if !jobA && jobB {
+			return false
+		}
+
+		return false
+	})
+
 	return formattedCrew
+}
+
+func FormatHeaderBackdrop(credits []map[string]any) map[string]any {
+	var filteredCredits []map[string]any
+
+	for _, credit := range credits {
+		mediaType, _ := credit["media_type"].(string)
+		if mediaType != "movie" && mediaType != "tv" {
+			continue
+		}
+
+		if backdropPath, ok := credit["backdrop_path"].(string); ok && backdropPath != "" {
+			voteCount, _ := credit["vote_count"].(float64)
+
+			if character, ok := credit["character"].(string); ok {
+				if character == "" || strings.Contains(strings.ToLower(character), "self") {
+					continue
+				} else {
+					log.Println("Non filtrato:", character, credit["name"], credit["title"], credit["popularity"])
+				}
+			}
+
+			if voteCount > 200 {
+				filteredCredits = append(filteredCredits, credit)
+			}
+		}
+	}
+
+	sort.Slice(filteredCredits, func(i, j int) bool {
+		popI, _ := filteredCredits[i]["popularity"].(float64)
+		popJ, _ := filteredCredits[j]["popularity"].(float64)
+		return popI > popJ
+	})
+
+	if len(filteredCredits) > 0 {
+		return filteredCredits[0]
+	}
+
+	return nil
 }
 
 func FormatCombinedCredits(cast []map[string]any) []map[string]any {
@@ -322,6 +368,9 @@ func FormatCreditsReleaseDate(list []map[string]any) []map[string]any {
 			if firstAirDate, ok := credit["first_air_date"].(string); ok {
 				newCredit["release_date"] = firstAirDate
 			}
+		}
+		if backdrop, ok := credit["backdrop_path"]; ok {
+			newCredit["backdrop_path"] = backdrop
 		}
 		result = append(result, newCredit)
 	}

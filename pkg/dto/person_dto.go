@@ -14,15 +14,18 @@ type PersonDto struct {
 	CrewCredits        []ContentPersonWorkTo `json:"crew_credits"`
 	KnowFor            []types.ContentCard   `json:"known_for"`
 	ExternalIds        ExternalIdsDto        `json:"external_ids"`
+	HeaderBackdrop     ContentPersonWorkTo   `json:"header_backdrop"`
 }
 
 type ContentPersonWorkTo struct {
-	ID          float64 `json:"id"`
-	Title       string  `json:"title,omitempty"`
-	Name        string  `json:"name,omitempty"`
-	MediaType   string  `json:"media_type"`
-	Character   string  `json:"character,omitempty"`
-	Job         string  `json:"job,omitempty"`
-	ReleaseDate string  `json:"release_date,omitempty"`
-	VoteAverage float64 `json:"vote_average"`
+	ID           float64 `json:"id"`
+	Title        string  `json:"title,omitempty"`
+	Name         string  `json:"name,omitempty"`
+	MediaType    string  `json:"media_type"`
+	Character    string  `json:"character,omitempty"`
+	Job          string  `json:"job,omitempty"`
+	ReleaseDate  string  `json:"release_date,omitempty"`
+	VoteAverage  float64 `json:"vote_average"`
+	BackdropPath string  `json:"backdrop_path"`
+	VoteCount    float64 `json:"vote_count"`
 }

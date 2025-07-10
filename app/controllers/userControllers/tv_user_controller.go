@@ -26,7 +26,7 @@ func AddUserTv(c *fiber.Ctx) error {
 		BackdropPath string    `json:"backdrop_path"`
 		PosterPath   string    `json:"poster_path"`
 		ReleaseDate  string    `json:"release_date"`
-		Duration     float64   `json:"duration"`
+		SeasonNumber int       `json:"season_number"`
 		Genres       []float64 `json:"genres"`
 	}
 	if err := c.BodyParser(&input); err != nil {
@@ -36,14 +36,22 @@ func AddUserTv(c *fiber.Ctx) error {
 		})
 	}
 
+	duration, err := services.FetchTotalTvDuration(contentId, input.SeasonNumber)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Failed to fetch TV duration: " + err.Error(),
+		})
+	}
+
 	contentInfo := services.ContentInfo{
 		Title:        input.Title,
 		ContentID:    contentId,
-		ContentType:  "movie",
+		ContentType:  "tv",
 		BackdropPath: input.BackdropPath,
 		PosterPath:   input.PosterPath,
 		ReleaseDate:  input.ReleaseDate,
-		Duration:     input.Duration,
+		Duration:     duration,
 		Genres:       input.Genres,
 	}
 

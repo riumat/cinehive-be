@@ -51,10 +51,14 @@ func FetchPersonDetails(client *config.TMDBClient, id string) (dto.PersonDto, er
 
 	knownForDepartment, _ := data["known_for_department"].(string)
 	var knownForCredits []map[string]any
+	var headerBackdrop map[string]any
+
 	if knownForDepartment == "Acting" {
 		knownForCredits = utils.FormatCombinedCredits(castCredits)
+		headerBackdrop = utils.FormatHeaderBackdrop(castCredits)
 	} else {
 		knownForCredits = utils.FormatCombinedCredits(crewCredits)
+		headerBackdrop = utils.FormatHeaderBackdrop(crewCredits)
 	}
 
 	formattedCastCredits := utils.FormatCreditsReleaseDate(castCredits)
@@ -68,6 +72,7 @@ func FetchPersonDetails(client *config.TMDBClient, id string) (dto.PersonDto, er
 	result["external_ids"] = externalData
 	result["cast_credits"] = formattedCastCredits
 	result["crew_credits"] = formattedCrewCredits
+	result["header_backdrop"] = headerBackdrop
 
 	jsonBytes, err := json.Marshal(result)
 	if err != nil {

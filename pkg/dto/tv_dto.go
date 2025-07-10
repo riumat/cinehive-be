@@ -25,4 +25,5 @@ type TvDetailsDto struct {
 	VoteAverage         float64                   `json:"vote_average"`
 	VoteCount           float64                   `json:"vote_count"`
 	ProvidersLink       string                    `json:"providers_link"`
+	MediaType           string                    `json:"media_type,omitempty"`
 }

@@ -11,6 +11,7 @@ type Actor struct {
 	Name        string  `json:"name"`
 	ProfilePath string  `json:"profile_path"`
 	Character   string  `json:"character"`
+	Popularity  float64 `json:"popularity"`
 }
 
 type CrewMember struct {
@@ -18,6 +19,8 @@ type CrewMember struct {
 	Name        string  `json:"name"`
 	ProfilePath string  `json:"profile_path"`
 	Job         string  `json:"job"`
+	Department  string  `json:"department"`
+	Popularity  float64 `json:"popularity"`
 }
 
 type Episode struct {
@@ -85,6 +88,7 @@ type ContentCard struct {
 	PosterPath   string  `json:"poster_path"`
 	BackdropPath string  `json:"backdrop_path"`
 	VoteAverage  float64 `json:"vote_average"`
+	VoteCount    float64 `json:"vote_count"`
 	ReleaseDate  string  `json:"release_date,omitempty"`
 	FirstAirDate string  `json:"first_air_date,omitempty"`
 	MediaType    string  `json:"media_type"`

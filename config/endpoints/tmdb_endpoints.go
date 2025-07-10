@@ -28,7 +28,14 @@ var TmdbEndpoint = struct {
 		TV     string
 	}
 	Search struct {
-		Multi string
+		Multi  string
+		Movie  string
+		TV     string
+		Person string
+	}
+	Upcoming struct {
+		Movies string
+		TV     string
 	}
 	DynamicContent struct {
 		All             func(contentType, id string) string
@@ -38,6 +45,7 @@ var TmdbEndpoint = struct {
 		Credits         func(contentType, id, creditType string) string
 		Recommendations func(contentType, id string) string
 		Videos          func(contentType, id string) string
+		Season          func(contentType, id string, seasonNumber string) string
 	}
 	Person struct {
 		All           func(id string) string
@@ -75,9 +83,22 @@ var TmdbEndpoint = struct {
 		},
 	},
 	Search: struct {
-		Multi string
+		Multi  string
+		Movie  string
+		TV     string
+		Person string
 	}{
-		Multi: SEARCH + "/multi",
+		Multi:  SEARCH + "/multi",
+		Movie:  SEARCH + "/movie",
+		TV:     SEARCH + "/tv",
+		Person: SEARCH + "/person",
+	},
+	Upcoming: struct {
+		Movies string
+		TV     string
+	}{
+		Movies: "/movie/upcoming?region=it", //todo collegare queste al service e poi al controller
+		TV:     "/tv/on_the_air?timezone=cest",
 	},
 	DynamicContent: struct {
 		All             func(contentType, id string) string
@@ -87,6 +108,7 @@ var TmdbEndpoint = struct {
 		Credits         func(contentType, id, creditType string) string
 		Recommendations func(contentType, id string) string
 		Videos          func(contentType, id string) string
+		Season          func(contentType, id string, seasonNumber string) string
 	}{
 		All: func(contentType, id string) string {
 			return fmt.Sprintf("/%s/%s", contentType, id)
@@ -108,6 +130,9 @@ var TmdbEndpoint = struct {
 		},
 		Videos: func(contentType, id string) string {
 			return fmt.Sprintf("/%s/%s/videos", contentType, id)
+		},
+		Season: func(contentType, id string, seasonNumber string) string {
+			return fmt.Sprintf("/%s/%s/season/%s", contentType, id, seasonNumber)
 		},
 	},
 	Person: struct {

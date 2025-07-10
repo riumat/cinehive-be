@@ -13,6 +13,7 @@ func PublicRoutes(a *fiber.App) {
 	route.Post("/auth/signup", controllers.SupabaseUserSignUp)
 	route.Post("/auth/signin", controllers.SupabaseUserSignIn)
 	route.Post("/auth/refresh-token", controllers.RefreshAuthToken)
+	route.Get("/auth/me", middleware.AuthMiddleware(), controllers.GetUserProfile)
 
 	route.Get("/trending", controllers.GetTrendingContent)
 
@@ -20,13 +21,21 @@ func PublicRoutes(a *fiber.App) {
 	route.Get("/genres/tv", controllers.GetTvGenres)
 
 	route.Get("/search", controllers.GetSearchResults)
+	route.Get("/search/movie", controllers.GetMovieSearchResults)
+	route.Get("/search/tv", controllers.GetTvSearchResults)
+	route.Get("/search/person", controllers.GetPersonSearchResults)
 	route.Get("/search/filters", controllers.GetSearchWithFilters)
+
+	route.Get("/upcoming", controllers.GetUpcoming)
 
 	route.Get("/movie/:id", controllers.GetMovieDetails)
 
 	route.Get("/tv/:id", controllers.GetTvDetails)
 
 	route.Get("/person/:id", controllers.GetPersonDetails)
+
+	route.Get("/user/watchlist", middleware.AuthMiddleware(), usercontrollers.GetUserWatchlist)
+	route.Get("/user/watch", middleware.AuthMiddleware(), usercontrollers.GetUserWatch)
 
 	route.Get("/user/person/:id", middleware.AuthMiddleware(), controllers.GetUserPersonDetails)
 	route.Post("/user/person/:id", middleware.AuthMiddleware(), usercontrollers.AddUserPerson)

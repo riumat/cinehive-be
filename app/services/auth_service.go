@@ -16,8 +16,10 @@ type supabaseAuthResponse struct {
 	AccessToken  string `json:"access_token,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 	User         *struct {
-		ID    string `json:"id"`
-		Email string `json:"email"`
+		ID       string `json:"id"`
+		Email    string `json:"email"`
+		Username string `json:"username,omitempty"`
+		FullName string `json:"full_name,omitempty"`
 	} `json:"user,omitempty"`
 
 	Code      int    `json:"code,omitempty"`
@@ -25,13 +27,66 @@ type supabaseAuthResponse struct {
 	Msg       string `json:"msg,omitempty"`
 }
 
-func AddUserToProfile(userId string, username string) error {
+func FetchMe(token string) (supabaseAuthResponse, error) {
+	url := os.Getenv("SUPABASE_URL") + endpoints.Supabase.Tables.Profiles
+	anonKey := os.Getenv("SUPABASE_ANON_KEY")
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return supabaseAuthResponse{Code: 500}, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("apikey", anonKey)
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return supabaseAuthResponse{Code: 500}, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return supabaseAuthResponse{Code: resp.StatusCode}, fmt.Errorf("failed to fetch user profile: status code %d", resp.StatusCode)
+	}
+
+	var profiles []map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&profiles); err != nil {
+		return supabaseAuthResponse{Code: 500}, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	if len(profiles) == 0 {
+		return supabaseAuthResponse{Code: 404}, fmt.Errorf("user profile not found")
+	}
+
+	profile := profiles[0]
+
+	// Estrai i dati del profilo
+	username, _ := profile["username"].(string)
+	fullName, _ := profile["full_name"].(string)
+
+	return supabaseAuthResponse{
+		User: &struct {
+			ID       string `json:"id"`
+			Email    string `json:"email"`
+			Username string `json:"username,omitempty"`
+			FullName string `json:"full_name,omitempty"`
+		}{
+			Username: username,
+			FullName: fullName,
+		},
+	}, nil
+}
+
+func AddUserToProfile(userId string, username string, fullName string) error {
 	url := os.Getenv("SUPABASE_URL") + endpoints.Supabase.Tables.Profiles
 	anonKey := os.Getenv("SUPABASE_ANON_KEY")
 
 	payload := map[string]string{
-		"user_id":  userId,
-		"username": username,
+		"user_id":   userId,
+		"username":  username,
+		"full_name": fullName,
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
