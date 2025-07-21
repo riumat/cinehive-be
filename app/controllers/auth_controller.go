@@ -47,7 +47,6 @@ func SupabaseUserSignUp(c *fiber.Ctx) error {
 	type SignUpInput struct {
 		Email    string `json:"email" validate:"required,email"`
 		Username string `json:"username" validate:"required,min=3,max=30"`
-		FullName string `json:"fullName" validate:"required,min=3,max=50"`
 		Password string `json:"password" validate:"required,min=6"`
 	}
 
@@ -92,7 +91,7 @@ func SupabaseUserSignUp(c *fiber.Ctx) error {
 			"msg":   err.Error(),
 		})
 	}
-	if err := services.AddUserToProfile(data.User.ID, input.Username, input.FullName); err != nil {
+	if err := services.AddUserToProfile(data.User.ID, input.Username, nil); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   "Failed to add user to profile: " + err.Error(),

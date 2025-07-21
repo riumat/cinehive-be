@@ -153,7 +153,7 @@ func EditUserTv(c *fiber.Ctx) error {
 		})
 	}
 
-	code, message := services.EditRating(client, userID, contentId, data.Rating)
+	code, message := services.EditRating(client, userID, contentId, "tv", data.Rating)
 
 	if message != nil {
 		return c.Status(code).JSON(fiber.Map{
@@ -183,7 +183,7 @@ func DeleteUserTv(c *fiber.Ctx) error {
 
 	contentId := c.Params("id")
 
-	code, message := services.DeleteUserContent(client, userID, contentId)
+	code, message := services.DeleteUserContent(client, userID, "tv", contentId)
 
 	if message != nil {
 		return c.Status(code).JSON(fiber.Map{
@@ -213,7 +213,7 @@ func DeleteUserTvWatchlist(c *fiber.Ctx) error {
 
 	contentId := c.Params("id")
 
-	code, message := services.DeleteUserContentWatchlist(client, userID, contentId)
+	code, message := services.DeleteUserContentWatchlist(client, userID, "tv", contentId)
 
 	if message != nil {
 		return c.Status(code).JSON(fiber.Map{

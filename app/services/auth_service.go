@@ -62,7 +62,6 @@ func FetchMe(token string) (supabaseAuthResponse, error) {
 
 	profile := profiles[0]
 
-	// Estrai i dati del profilo
 	username, _ := profile["username"].(string)
 	fullName, _ := profile["full_name"].(string)
 
@@ -79,11 +78,11 @@ func FetchMe(token string) (supabaseAuthResponse, error) {
 	}, nil
 }
 
-func AddUserToProfile(userId string, username string, fullName string) error {
+func AddUserToProfile(userId string, username string, fullName *string) error {
 	url := os.Getenv("SUPABASE_URL") + endpoints.Supabase.Tables.Profiles
 	anonKey := os.Getenv("SUPABASE_ANON_KEY")
 
-	payload := map[string]string{
+	payload := map[string]any{
 		"user_id":   userId,
 		"username":  username,
 		"full_name": fullName,

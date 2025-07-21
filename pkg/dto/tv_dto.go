@@ -10,8 +10,8 @@ type TvDetailsDto struct {
 	Genres              []types.Genre             `json:"genres"`
 	BackdropPath        string                    `json:"backdrop_path"`
 	PosterPath          string                    `json:"poster_path"`
-	NextEpisodeToAir    types.Episode             `json:"next_episode_to_air"`
-	LastEpisodeToAir    types.Episode             `json:"last_episode_to_air"`
+	NextEpisodeToAir    *types.Episode            `json:"next_episode_to_air"`
+	LastEpisodeToAir    *types.Episode            `json:"last_episode_to_air"`
 	Seasons             []types.Season            `json:"seasons"`
 	SpokenLanguages     []types.LanguageSpoken    `json:"spoken_languages"`
 	Status              string                    `json:"status"`

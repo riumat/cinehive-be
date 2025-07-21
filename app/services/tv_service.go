@@ -72,7 +72,7 @@ func FetchTotalTvDuration(contentId string, seasons int) (float64, error) {
 	g, _ := errgroup.WithContext(context.Background())
 
 	for seasonNum := 1; seasonNum <= seasons; seasonNum++ {
-		seasonNum := seasonNum // capture loop variable
+		seasonNum := seasonNum
 		type seasonData struct {
 			Episodes []struct {
 				Runtime float64 `json:"runtime"`

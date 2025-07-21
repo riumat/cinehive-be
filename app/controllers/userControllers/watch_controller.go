@@ -101,7 +101,7 @@ func GetUserWatch(c *fiber.Ctx) error {
 					details = tvDetails
 
 				} else {
-					return nil // Skip unknown content types
+					return nil
 				}
 
 				mu.Lock()

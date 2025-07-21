@@ -130,13 +130,7 @@ func GetPersonSearchResults(c *fiber.Ctx) error {
 }
 
 func GetSearchWithFilters(c *fiber.Ctx) error {
-	media := c.Query("media")
-	if media == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   "Media parameter (movie or tv) is required",
-		})
-	}
+	media := c.Query("media", "movie")
 
 	currentYear := time.Now().Format("2006")
 

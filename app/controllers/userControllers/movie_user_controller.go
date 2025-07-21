@@ -1,6 +1,8 @@
 package usercontrollers
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/riumat/cinehive-be/app/services"
 	"github.com/riumat/cinehive-be/config"
@@ -145,7 +147,9 @@ func EditUserMovie(c *fiber.Ctx) error {
 		})
 	}
 
-	code, message := services.EditRating(client, userID, contentId, data.Rating)
+	log.Println("Editing movie with ID:", contentId, "for user:", userID, "with rating:", data.Rating)
+
+	code, message := services.EditRating(client, userID, contentId, "movie", data.Rating)
 
 	if message != nil {
 		return c.Status(code).JSON(fiber.Map{
@@ -175,7 +179,7 @@ func DeleteUserMovie(c *fiber.Ctx) error {
 
 	contentId := c.Params("id")
 
-	code, message := services.DeleteUserContent(client, userID, contentId)
+	code, message := services.DeleteUserContent(client, userID, "movie", contentId)
 
 	if message != nil {
 		return c.Status(code).JSON(fiber.Map{
@@ -205,7 +209,7 @@ func DeleteUserMovieWatchlist(c *fiber.Ctx) error {
 
 	contentId := c.Params("id")
 
-	code, message := services.DeleteUserContentWatchlist(client, userID, contentId)
+	code, message := services.DeleteUserContentWatchlist(client, userID, "movie", contentId)
 
 	if message != nil {
 		return c.Status(code).JSON(fiber.Map{

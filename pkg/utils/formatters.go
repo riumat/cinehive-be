@@ -57,7 +57,6 @@ func FormatVideoList(videos []any) ([]any, []any) {
 func FormatMovieCrewList(crew []any) []types.CrewMember {
 	var filteredCrew []any
 
-	// filter
 	for _, member := range crew {
 		memberMap, ok := member.(map[string]any)
 		if !ok {
@@ -102,7 +101,6 @@ func FormatMovieCrewList(crew []any) []types.CrewMember {
 		return formattedCrew[i].Popularity > formattedCrew[j].Popularity
 	})
 
-	// sort
 	sort.Slice(formattedCrew, func(i, j int) bool {
 		jobA := strings.ToLower(formattedCrew[i].Job) == "director"
 		jobB := strings.ToLower(formattedCrew[j].Job) == "director"
@@ -122,7 +120,6 @@ func FormatMovieCrewList(crew []any) []types.CrewMember {
 func FormatCrewTvList(crew []any) []types.CrewMember {
 	var filteredCrew []any
 
-	// filter
 	for _, member := range crew {
 		memberMap, ok := member.(map[string]any)
 		if !ok {

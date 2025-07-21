@@ -97,7 +97,7 @@ var TmdbEndpoint = struct {
 		Movies string
 		TV     string
 	}{
-		Movies: "/movie/upcoming?region=it", //todo collegare queste al service e poi al controller
+		Movies: "/movie/upcoming?region=it",
 		TV:     "/tv/on_the_air?timezone=cest",
 	},
 	DynamicContent: struct {
