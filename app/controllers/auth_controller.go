@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/riumat/cinehive-be/app/services"
+	"github.com/riumat/cinehive-be/config"
 	"github.com/riumat/cinehive-be/pkg/utils"
 )
 
@@ -37,9 +38,29 @@ func GetUserProfile(c *fiber.Ctx) error {
 		})
 	}
 
+	userId, ok := c.Locals("user_id").(string)
+	if !ok || userId == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": true,
+			"msg":   "User ID not found",
+		})
+	}
+
+	supabaseClient := config.NewSupabaseClient(token)
+	stats, err := services.FetchUserStats(supabaseClient, userId)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": true,
+			"msg":   "Failed to fetch user stats: " + err.Error(),
+		})
+	}
+
 	return c.JSON(fiber.Map{
 		"error": false,
-		"data":  profile.User,
+		"data": fiber.Map{
+			"profile": profile.User,
+			"stats":   stats,
+		},
 	})
 }
 
