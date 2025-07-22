@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/riumat/cinehive-be/config"
 )
@@ -49,7 +50,7 @@ func getTotalWatched(client *config.SupabaseClient, userId string) (int, error) 
 	endpoint := "/rest/v1/watch"
 	query := map[string]string{
 		"user_id": fmt.Sprintf("eq.%s", userId),
-		"select":  "count",
+		"select":  "id",
 	}
 
 	resp, err := client.Get(endpoint, query)
@@ -75,7 +76,7 @@ func getTotalWatchlist(client *config.SupabaseClient, userId string) (int, error
 	endpoint := "/rest/v1/watchlist"
 	query := map[string]string{
 		"user_id": fmt.Sprintf("eq.%s", userId),
-		"select":  "count",
+		"select":  "id",
 	}
 
 	resp, err := client.Get(endpoint, query)
@@ -117,59 +118,87 @@ func getTopGenres(client *config.SupabaseClient, userId string) ([]GenreStats, e
 
 	var watchedContent []struct {
 		Content struct {
-			ContentID   string        `json:"content_id"`
-			ContentType string        `json:"content_type"`
-			Genres      []interface{} `json:"genres"`
+			ContentID   float64 `json:"content_id"`
+			ContentType string  `json:"content_type"`
+			Genres      string  `json:"genres"`
 		} `json:"content"`
 	}
 
 	if err := json.Unmarshal(body, &watchedContent); err != nil {
+		log.Println("Error unmarshalling watched content:", err)
 		return nil, err
 	}
 
-	genreCount := make(map[int]struct {
-		name  string
-		count int
-	})
+	log.Printf("Found %d watched content items", len(watchedContent))
 
+	genreCount := make(map[int]int)
 	totalGenreOccurrences := 0
 
 	for _, item := range watchedContent {
-		for _, genreInterface := range item.Content.Genres {
-			if genreMap, ok := genreInterface.(map[string]interface{}); ok {
-				if idFloat, ok := genreMap["id"].(float64); ok {
-					if nameStr, ok := genreMap["name"].(string); ok {
-						genreID := int(idFloat)
-
-						if existing, exists := genreCount[genreID]; exists {
-							genreCount[genreID] = struct {
-								name  string
-								count int
-							}{name: existing.name, count: existing.count + 1}
-						} else {
-							genreCount[genreID] = struct {
-								name  string
-								count int
-							}{name: nameStr, count: 1}
-						}
-						totalGenreOccurrences++
-					}
-				}
+		var genreIDs []int
+		if item.Content.Genres != "" {
+			if err := json.Unmarshal([]byte(item.Content.Genres), &genreIDs); err != nil {
+				log.Printf("Error parsing genres string for content ID %.0f: %v (genres: %s)", item.Content.ContentID, err, item.Content.Genres)
+				continue
 			}
+		}
+
+		for _, genreID := range genreIDs {
+			genreCount[genreID]++
+			totalGenreOccurrences++
 		}
 	}
 
+	log.Printf("Total genre occurrences: %d", totalGenreOccurrences)
+
+	if totalGenreOccurrences == 0 {
+		return []GenreStats{}, nil
+	}
+
+	genreNames := map[int]string{
+		28:    "Action",
+		12:    "Adventure",
+		16:    "Animation",
+		35:    "Comedy",
+		80:    "Crime",
+		99:    "Documentary",
+		18:    "Drama",
+		10751: "Family",
+		14:    "Fantasy",
+		36:    "History",
+		27:    "Horror",
+		10402: "Music",
+		9648:  "Mystery",
+		10749: "Romance",
+		878:   "Science Fiction",
+		10770: "TV Movie",
+		53:    "Thriller",
+		10752: "War",
+		37:    "Western",
+		// TV Genres
+		10759: "Action & Adventure",
+		10762: "Kids",
+		10763: "News",
+		10764: "Reality",
+		10765: "Sci-Fi & Fantasy",
+		10766: "Soap",
+		10767: "Talk",
+		10768: "War & Politics",
+	}
+
 	var topGenres []GenreStats
-	for id, data := range genreCount {
-		percentage := 0.0
-		if totalGenreOccurrences > 0 {
-			percentage = (float64(data.count) / float64(totalGenreOccurrences)) * 100
+	for genreID, count := range genreCount {
+		percentage := (float64(count) / float64(totalGenreOccurrences)) * 100
+
+		genreName, exists := genreNames[genreID]
+		if !exists {
+			genreName = fmt.Sprintf("Unknown Genre (%d)", genreID)
 		}
 
 		topGenres = append(topGenres, GenreStats{
-			ID:         id,
-			Name:       data.name,
-			Count:      data.count,
+			ID:         genreID,
+			Name:       genreName,
+			Count:      count,
 			Percentage: percentage,
 		})
 	}
@@ -181,6 +210,12 @@ func getTopGenres(client *config.SupabaseClient, userId string) ([]GenreStats, e
 			}
 		}
 	}
+
+	if len(topGenres) > 5 {
+		topGenres = topGenres[:5]
+	}
+
+	log.Printf("Returning top %d genres", len(topGenres))
 
 	return topGenres, nil
 }
